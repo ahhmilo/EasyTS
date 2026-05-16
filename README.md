@@ -37,8 +37,6 @@ EasyTS only reads and writes to VALORANT's local configuration file on your mach
 
 Because EasyTS is unsigned software from an independent developer, Windows Defender and SmartScreen may flag it as unrecognized — this is a standard false positive, not an indication of malware. If SmartScreen blocks it, click **More info → Run anyway**.
 
-If you are not comfortable running it, you are welcome to review the source code directly in this repository before deciding.
-
 ### Why do I need to be logged in to an account?
 VALORANT uses a per-account config system. Each account has its own separate configuration file, so True-Stretch must be set individually per account.
 

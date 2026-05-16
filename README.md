@@ -9,9 +9,28 @@ A lightweight Windows tool that instantly applies a True-Stretch resolution to a
 ---
 
 ## Download
-- Go to [Releases](https://github.com/ahhmilo/EasyTS/releases/)
-- Under **Assets**, click `EasyTS.exe`
+Choose the version that fits your needs:
+
+### Stable version (terminal)
+- Recommended for most users
+- Most tested and reliable
+
+[Latest release](https://github.com/ahhmilo/EasyTS/releases/latest)
+
+---
+
+### Beta version (GUI, experimental)
+- New graphical interface (pywebview)
+- May contain bugs or incomplete features
+
+[Download beta release](https://github.com/ahhmilo/EasyTS/releases/tag/v2.0.0-beta)
+
+---
+
+## Installation
+- Download the `.exe`
 - Move it somewhere accessible (Desktop, Downloads, etc.)
+- Run it directly (no installer required)
 
 ---
 

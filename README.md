@@ -1,5 +1,5 @@
 [![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white)](#)
-![Language](https://img.shields.io/badge/built%20with-Python-yellow?style=flat-square)
+[![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=fff)](#)
 [![HTML](https://img.shields.io/badge/HTML-%23E34F26.svg?logo=html5&logoColor=white)](#)
 ![License](https://img.shields.io/badge/license-Proprietary-red)
 

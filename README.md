@@ -49,13 +49,13 @@ This tool only modifies a local config file and makes no contact with Riot's ser
 Your monitor needs to support custom resolutions without black bars for True-Stretch to work. If your display already supports a custom resolution natively, it should work.
 
 ### What are some popular resolutions?
-| Resolution  |
-|-------------|
-| 1440x1080   |
-| 1280x1024   |
-| 1600x1080   |
-| 1154x1080   |
-| 1080x1080   |
+| Popular Resolutions |
+|---------------------|
+| 1440x1080           |
+| 1280x1024           |
+| 1600x1080           |
+| 1154x1080           |
+| 1080x1080           |
 
 ### How do I uninstall EasyTS?
 Just delete the file. No installer, no leftover files.

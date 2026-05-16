@@ -1,6 +1,6 @@
+![Status](https://img.shields.io/badge/status-active-brightgreen?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue?style=flat-square)
 ![Language](https://img.shields.io/badge/built%20with-Python-yellow?style=flat-square)
-![Status](https://img.shields.io/badge/status-active-brightgreen?style=flat-square)
 ![License](https://img.shields.io/badge/license-Proprietary-red?style=flat-square)
 
 # EasyTS

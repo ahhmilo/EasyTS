@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EasyTS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:         #0f0f0f;
+      --surface:    #1a1a1a;
+      --header:     #121212;
+      --border:     #2a2a2a;
+      --border2:    #3a3a3a;
+      --accent:     #ff4655;
+      --accent-dim: rgba(255,70,85,0.12);
+      --accent-glow:rgba(255,70,85,0.25);
+      --text:       #ececec;
+      --muted:      #8a8a8a;
+      --muted2:     #5a5a5a;
+      --close-hover:#ff5555;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: 'Outfit', sans-serif;
+      color: var(--text);
+      user-select: none;
+    }
+
+    
+    #header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 46px;
+      padding: 0 14px 0 18px;
+      background: var(--header);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+
+    #header-left { display: flex; align-items: center; gap: 9px; }
+
+    #logo-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    #app-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .window-btn {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .window-btn:hover { background: var(--surface); border-color: var(--accent); color: var(--accent); }
+    #btn-close:hover { background: var(--close-hover); border-color: var(--close-hover); color: #fff; }
+    .window-btn svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+
+    
+    #content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: calc(100vh - 46px);
+      padding: 24px 32px;
+      overflow-y: auto;
+    }
+
+    #title-block { text-align: center; margin-bottom: 16px; }
+
+    #app-name {
+      font-size: 44px; font-weight: 700;
+      letter-spacing: -0.02em; line-height: 1;
+    }
+    #app-name span { color: var(--accent); }
+
+    #app-tagline {
+      margin-top: 8px;
+      font-size: 12.5px; font-weight: 400;
+      color: var(--muted); letter-spacing: 0.02em;
+    }
+
+    .divider {
+      width: 100%; max-width: 560px;
+      height: 1px; background: var(--border);
+      margin: 20px 0;
+    }
+
+    
+    .input-card {
+      width: 100%; max-width: 460px;
+      margin-bottom: 20px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .input-label {
+      display: flex; align-items: center; gap: 7px;
+      padding: 0 0 8px 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted2);
+    }
+    .input-label::before {
+      content: ''; display: inline-block;
+      width: 5px; height: 5px;
+      border-radius: 50%; background: var(--muted2);
+    }
+
+    
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      height: 48px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-wrapper:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    #resolution-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text);
+      padding: 0;
+      margin: 0;
+      height: auto;
+    }
+
+    
+    #btn-start {
+      width: 100%; max-width: 460px; height: 48px;
+      border-radius: 10px; border: none;
+      background: var(--accent); color: #111;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px; font-weight: 600; letter-spacing: 0.03em;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: opacity 0.15s, transform 0.12s, box-shadow 0.2s;
+      box-shadow: 0 4px 24px var(--accent-glow);
+      margin-bottom: 24px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #btn-start:hover { opacity: 0.88; box-shadow: 0 6px 32px var(--accent-glow); }
+    #btn-start:active { transform: scale(0.985); }
+    #btn-start:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    
+    #log-console {
+      width: 100%;
+      max-width: 800px;
+      background: #0c0c0c;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #ccc;
+      padding: 12px;
+      height: 280px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      user-select: text;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .log-entry { margin: 2px 0; line-height: 1.4; }
+    .log-success { color: #ff4655; }
+    .log-error   { color: #ff8888; }
+    .log-info    { color: #9cdcfe; }
+    .log-muted   { color: #6a6a6a; }
+  </style>
+</head>
+<body>
+
+  <header id="header">
+    <div id="header-left">
+      <div id="logo-dot"></div>
+      <div id="app-title">EasyTS</div>
+    </div>
+    <div class="window-controls">
+      <button id="btn-minimize" class="window-btn" title="Minimize">
+        <svg viewBox="0 0 12 12" fill="none">
+          <line x1="2" y1="6" x2="10" y2="6"/>
+        </svg>
+      </button>
+      <button id="btn-close" class="window-btn" title="Close">
+        <svg viewBox="0 0 12 12" fill="none">
+          <line x1="1" y1="1" x2="11" y2="11"/>
+          <line x1="11" y1="1" x2="1"  y2="11"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="content">
+    <div id="title-block">
+      <div id="app-name">Easy<span>TS</span></div>
+      <div id="app-tagline">True‑Stretched resolution for VALORANT</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="input-card">
+      <div class="input-label">Resolution (Width x Height)</div>
+      <div class="input-wrapper">
+        <input type="text" id="resolution-input" placeholder="e.g., 1440x1080" autocomplete="off">
+      </div>
+    </div>
+
+    <button id="btn-start">▶ Start</button>
+
+    <div id="log-console">
+      <div class="log-entry log-muted">> Ready. Enter a resolution and click Start.</div>
+    </div>
+  </main>
+
+  <script>
+    const resolutionInput = document.getElementById('resolution-input');
+    const startBtn = document.getElementById('btn-start');
+    const logConsole = document.getElementById('log-console');
+
+    function addLog(message, type = 'info') {
+      const div = document.createElement('div');
+      div.className = `log-entry log-${type}`;
+      div.textContent = message;
+      logConsole.appendChild(div);
+      div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function setRunning(running) {
+      startBtn.disabled = running;
+    }
+
+    document.getElementById('btn-minimize').addEventListener('click', () => {
+      if (window.pywebview?.api?.minimize) window.pywebview.api.minimize();
+    });
+
+    document.getElementById('btn-close').addEventListener('click', () => {
+      if (window.pywebview?.api?.close) window.pywebview.api.close();
+      else addLog('[ERROR] Cannot close: API not ready', 'error');
+    });
+
+    startBtn.addEventListener('click', async () => {
+      const resolution = resolutionInput.value.trim();
+      if (!resolution) {
+        addLog('[ERROR] Please enter a resolution (e.g., 1440x1080)', 'error');
+        return;
+      }
+      if (!/^\d{3,4}x\d{3,4}$/i.test(resolution)) {
+        addLog('[ERROR] Invalid format. Use WIDTHxHEIGHT (e.g., 1440x1080)', 'error');
+        return;
+      }
+
+      logConsole.innerHTML = '';
+      addLog(`> Starting EasyTS with resolution ${resolution}...`, 'info');
+      setRunning(true);
+
+      try {
+        const result = await window.pywebview.api.apply_stretched(resolution);
+        if (result.success === false) addLog(`[ERROR] ${result.message}`, 'error');
+        else if (result.success === true) addLog(`[SUCCESS] ${result.message}`, 'success');
+      } catch (err) {
+        addLog(`[EXCEPTION] ${err.message || err}`, 'error');
+      } finally {
+        setRunning(false);
+      }
+    });
+
+    window.appendLog = function(message, type) {
+      let unescaped = message.replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r');
+      const lines = unescaped.split('\n');
+      for (const line of lines) if (line.trim() !== '') addLog(line, type);
+    };
+    window.setFinalStatus = function(running) {
+      setRunning(running);
+    };
+  </script>
+</body>
+</html>

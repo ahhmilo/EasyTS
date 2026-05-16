@@ -9,7 +9,9 @@ A lightweight Windows tool that instantly applies a True-Stretch resolution to a
 ---
 
 ## Download
-> **Coming soon.** A pre-built `.exe` will be available under [Releases](https://github.com/ahhmilo/EasyTS/releases/) once the first stable version is ready.
+- Go to [Releases](https://github.com/ahhmilo/EasyTS/releases/)
+- Under **Assets**, click `EasyTS.exe`
+- Move it somewhere accessible (Desktop, Downloads, etc.)
 
 ---
 

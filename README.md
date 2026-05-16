@@ -33,20 +33,20 @@ A lightweight Windows tool that instantly applies a True-Stretch resolution to a
 ## FAQ
 
 ### Is EasyTS safe to run?
-EasyTS only reads and writes to VALORANT's local configuration file on your machine. It makes no contact with Riot's servers and does not modify any game files.
+* EasyTS only reads and writes to VALORANT's local configuration file on your machine. It makes no contact with Riot's servers and does not modify any game files.
 
-Because EasyTS is unsigned software from an independent developer, Windows Defender and SmartScreen may flag it as unrecognized — this is a standard false positive, not an indication of malware. If SmartScreen blocks it, click **More info → Run anyway**.
+* Because EasyTS is unsigned software from an independent developer, Windows Defender and SmartScreen may flag it as unrecognized — this is a standard false positive, not an indication of malware. If SmartScreen blocks it, click **More info → Run anyway**.
 
-If you are not comfortable running my tool, please do **not** use EasyTS.
+* If you are not comfortable running my tool, please do **not** use EasyTS.
 
 ### Why do I need to be logged in to an account?
-VALORANT uses a per-account config system. Each account has its own separate configuration file, so True-Stretch must be set individually per account.
+* VALORANT uses a per-account config system. Each account has its own separate configuration file, so True-Stretch must be set individually per account.
 
 ### Will I get banned?
-This tool only modifies a local config file and makes no contact with Riot's servers during gameplay. The method has been used consistently across multiple accounts in high elo without any issues.
+* This tool only modifies a local config file and makes no contact with Riot's servers during gameplay. The method has been used consistently across multiple accounts in high elo without any issues.
 
 ### My True-Stretch isn't working after the confirmation message. Why?
-Your monitor needs to support custom resolutions without black bars for True-Stretch to work. If your display already supports a custom resolution natively, it should work.
+* Your monitor needs to support custom resolutions without black bars for True-Stretch to work. If your display already supports a custom resolution natively, it should work.
 
 ### What are some popular resolutions?
 | Popular Resolutions |
@@ -58,17 +58,17 @@ Your monitor needs to support custom resolutions without black bars for True-Str
 | 1080x1080           |
 
 ### How do I uninstall EasyTS?
-Just delete the file. No installer, no leftover files.
+* Just delete the file. No installer, no leftover files.
 
-To undo the changes EasyTS made, you have two options:
+* To undo the changes EasyTS made, you have two options:
 
-**Easy:** Go into VALORANT's video settings and switch the window mode or resolution to something else and apply. VALORANT will regenerate the config.
+1. **Easy:** Go into VALORANT's video settings and switch the window mode or resolution to something else and apply. VALORANT will regenerate the config.
 
-**Manual:** Navigate to `%localappdata%\VALORANT\Saved\Config\`, find your account folder (you can get the ID from `RiotLocalMachine.ini` → `LastKnownUser`), open the `WindowsClient` folder inside it, and delete `GameUserSettings.ini`. 
+2. **Manual:** Navigate to `%localappdata%\VALORANT\Saved\Config\`, find your account folder (you can get the ID from `RiotLocalMachine.ini` → `LastKnownUser`), open the `WindowsClient` folder inside it, and delete `GameUserSettings.ini`. 
 * **Note this will also reset your graphics settings.**
 
 ### My question isn't listed here.
-Open an [issue](https://github.com/ahhmilo/EasyTS/issues) and I'll get back to you. You can also reach me on Discord: `x2kc`
+* Open an [issue](https://github.com/ahhmilo/EasyTS/issues) and I'll get back to you. You can also reach me on Discord: `x2kc`
 
 ---
 

@@ -16,7 +16,7 @@ EasyTS automatically handles resolution changes, fullscreen/windowed settings, s
 |---|---|
 | ![](https://files.catbox.moe/3wxgnu.png) | ![](https://files.catbox.moe/cr3qnr.png) |
 
-Both screenshots use the same resolution.
+Both screenshots use the same resolution (1440x1080).
 EasyTS applies the stretched/fill behavior automatically.
 
 ---

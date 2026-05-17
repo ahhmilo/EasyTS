@@ -1,6 +1,6 @@
-[![Windows](https://img.shields.io/badge/platform%3A%20Built%20for%20Windows-0078D6?logo=windows11&logoColor=white)](#)
-[![Python](https://img.shields.io/badge/language%3A%20Python-3776AB?logo=python&logoColor=fff)](#)
-[![HTML](https://img.shields.io/badge/language%3A%20HTML-%23E34F26.svg?logo=html5&logoColor=white)](#)
+[![Windows](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows11&logoColor=white&labelColor=555555)](#)
+[![Python](https://img.shields.io/badge/language-Python-3776AB?logo=python&logoColor=white&labelColor=555555)](#)
+[![HTML](https://img.shields.io/badge/language-HTML-E34F26?logo=html5&logoColor=white&labelColor=555555)](#)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](#)
 
 ![](https://files.catbox.moe/hnut3y.png)

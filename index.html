@@ -293,9 +293,7 @@
       setRunning(true);
 
       try {
-        const result = await window.pywebview.api.apply_stretched(resolution);
-        if (result.success === false) addLog(`[ERROR] ${result.message}`, 'error');
-        else if (result.success === true) addLog(`[SUCCESS] ${result.message}`, 'success');
+        await window.pywebview.api.apply_stretched(resolution);
       } catch (err) {
         addLog(`[EXCEPTION] ${err.message || err}`, 'error');
       } finally {

@@ -10,6 +10,17 @@ EasyTS automatically handles resolution changes, fullscreen/windowed settings, s
 
 ---
 
+## True-Stretch in action
+
+| Without True-Stretch | With True-Stretch |
+|---|---|
+| ![](https://files.catbox.moe/3wxgnu.png) | ![](https://files.catbox.moe/cr3qnr.png) |
+
+Both screenshots use the same resolution.
+EasyTS applies the stretched/fill behavior automatically.
+
+---
+
 ## Features
 - Instant True-Stretch applying
 - Multi-account support with saved account switching

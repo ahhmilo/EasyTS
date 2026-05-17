@@ -50,7 +50,7 @@ EasyTS applies the stretched/fill behavior automatically.
 - Windows 10 or Windows 11
 - Riot Client installed and logged in
 - VALORANT installed
-- VALORANT closed before applying changes
+- **VALORANT closed before applying changes**
 
 ---
 

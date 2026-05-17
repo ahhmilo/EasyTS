@@ -1,6 +1,6 @@
-[![Windows](https://custom-icon-badges.demolab.com/badge/Windows-0078D6?logo=windows11&logoColor=white)](#)
-[![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=fff)](#)
-[![HTML](https://img.shields.io/badge/HTML-%23E34F26.svg?logo=html5&logoColor=white)](#)
+[![Windows](https://img.shields.io/badge/platform%3A%20Built%20for%20Windows-0078D6?logo=windows11&logoColor=white)](#)
+[![Python](https://img.shields.io/badge/language%3A%20Python-3776AB?logo=python&logoColor=fff)](#)
+[![HTML](https://img.shields.io/badge/language%3A%20HTML-%23E34F26.svg?logo=html5&logoColor=white)](#)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](#)
 
 ![](https://files.catbox.moe/hnut3y.png)

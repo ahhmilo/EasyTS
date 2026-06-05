@@ -178,7 +178,7 @@ Deleting the config file will also reset graphics settings.
 Open an issue on GitHub or contact me on Discord:
 
 ```text
-x2kc
+vestryman
 ```
 
 ---

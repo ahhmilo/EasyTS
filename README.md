@@ -50,6 +50,7 @@ EasyTS applies the stretched/fill behavior automatically.
 - Windows 10 or Windows 11
 - Riot Client installed and logged in
 - VALORANT installed
+- Microsoft WebView2 Runtime — pre-installed on Windows 11, may need manual install on Windows 10. EasyTS will prompt you automatically if it is missing.
 
 ---
 

@@ -138,7 +138,6 @@ Use at your own discretion.
 
 ### Why is True-Stretch not working?
 Check the following:
-- Sometimes the fill mode might glitch - before running EasyTS set your game to **Fullscreen** mode with **Fill** checked.
 - Your monitor supports custom resolutions
 - GPU scaling is enabled in NVIDIA Control Panel or AMD Software if necessary
 

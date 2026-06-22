@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+
+<!-- ======================================================= -->
+<script>const EASYTS_VERSION = "v2.2.0";</script>
+<!-- ======================================================= -->
+
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -376,7 +381,7 @@
 
     <!-- Update banner (hidden until version check fires) -->
     <div id="update-banner">
-      <div id="update-banner-left">Update available: <span id="update-version"></span> — you are on v2.2.0</div>
+      <div id="update-banner-left">Update available: <span id="update-version"></span> — you are on <span id="current-version-label"></span></div>
       <div id="update-banner-right">
         <button id="btn-update-download">Download</button>
         <button id="btn-update-dismiss">✕</button>
@@ -540,6 +545,7 @@
     };
 
     // ── Init ──────────────────────────────────────────────────────────────────
+    document.getElementById('current-version-label').textContent = EASYTS_VERSION;
     window.addEventListener('pywebviewready', refreshAccounts);
   </script>
 

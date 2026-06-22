@@ -1,9 +1,4 @@
 <!DOCTYPE html>
-
-<!-- ======================================================= -->
-<script>const EASYTS_VERSION = "v2.3.0";</script>
-<!-- ======================================================= -->
-
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -537,15 +532,15 @@
     document.getElementById('btn-close').addEventListener('click',    () => window.pywebview.api.close());
 
     // ── Update banner ─────────────────────────────────────────────────────────
-    window.showUpdateBanner = function(latestVersion, downloadUrl) {
+    window.showUpdateBanner = function(latestVersion, currentVersion, downloadUrl) {
       document.getElementById('update-version').textContent = latestVersion;
+      document.getElementById('current-version-label').textContent = currentVersion;
       document.getElementById('update-banner').classList.add('visible');
       document.getElementById('btn-update-download').onclick = () => window.pywebview.api.open_url(downloadUrl);
       document.getElementById('btn-update-dismiss').onclick  = () => document.getElementById('update-banner').classList.remove('visible');
     };
 
     // ── Init ──────────────────────────────────────────────────────────────────
-    document.getElementById('current-version-label').textContent = EASYTS_VERSION;
     window.addEventListener('pywebviewready', refreshAccounts);
   </script>
 

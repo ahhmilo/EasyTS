@@ -284,6 +284,65 @@
     .log-error   { color: #ff6b6b; }
     .log-info    { color: #9cdcfe; }
     .log-muted   { color: var(--muted2); }
+
+    /* ── UPDATE BANNER ── */
+    #update-banner {
+      display: none;
+      width: 100%; max-width: 560px;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 14px;
+      background: rgba(255, 170, 0, 0.07);
+      border: 1px solid rgba(255, 170, 0, 0.25);
+      border-radius: 10px;
+      animation: fadeIn 0.3s ease;
+    }
+    #update-banner.visible { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+    #update-banner-left {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: #cccccc;
+      min-width: 0;
+    }
+    #update-banner-left::before {
+      content: '↑';
+      font-size: 13px; font-weight: 700;
+      color: #ffaa00;
+      flex-shrink: 0;
+    }
+    #update-banner-left span { color: #ffaa00; font-weight: 600; }
+
+    #update-banner-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+    #btn-update-download {
+      height: 26px; padding: 0 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,170,0,0.4);
+      background: transparent;
+      color: #ffaa00;
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    #btn-update-download:hover { background: rgba(255,170,0,0.12); }
+
+    #btn-update-dismiss {
+      height: 26px; width: 26px;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted2);
+      font-size: 14px; line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    #btn-update-dismiss:hover { background: var(--surface2); color: var(--text); }
   </style>
 </head>
 <body>
@@ -314,6 +373,15 @@
     </div>
 
     <div class="divider"></div>
+
+    <!-- Update banner (hidden until version check fires) -->
+    <div id="update-banner">
+      <div id="update-banner-left">Update available: <span id="update-version"></span> — you are on v2.2.0</div>
+      <div id="update-banner-right">
+        <button id="btn-update-download">Download</button>
+        <button id="btn-update-dismiss">✕</button>
+      </div>
+    </div>
 
     <!-- Resolution -->
     <div class="section-label">Resolution</div>
@@ -462,6 +530,14 @@
     // ── Window controls ───────────────────────────────────────────────────────
     document.getElementById('btn-minimize').addEventListener('click', () => window.pywebview.api.minimize());
     document.getElementById('btn-close').addEventListener('click',    () => window.pywebview.api.close());
+
+    // ── Update banner ─────────────────────────────────────────────────────────
+    window.showUpdateBanner = function(latestVersion, downloadUrl) {
+      document.getElementById('update-version').textContent = latestVersion;
+      document.getElementById('update-banner').classList.add('visible');
+      document.getElementById('btn-update-download').onclick = () => window.pywebview.api.open_url(downloadUrl);
+      document.getElementById('btn-update-dismiss').onclick  = () => document.getElementById('update-banner').classList.remove('visible');
+    };
 
     // ── Init ──────────────────────────────────────────────────────────────────
     window.addEventListener('pywebviewready', refreshAccounts);

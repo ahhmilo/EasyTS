@@ -532,16 +532,64 @@
     document.getElementById('btn-close').addEventListener('click',    () => window.pywebview.api.close());
 
     // ── Update banner ─────────────────────────────────────────────────────────
-    window.showUpdateBanner = function(latestVersion, currentVersion, downloadUrl) {
-      document.getElementById('update-version').textContent = latestVersion;
-      document.getElementById('current-version-label').textContent = currentVersion;
-      document.getElementById('update-banner').classList.add('visible');
-      document.getElementById('btn-update-download').onclick = () => window.pywebview.api.open_url(downloadUrl);
-      document.getElementById('btn-update-dismiss').onclick  = () => document.getElementById('update-banner').classList.remove('visible');
-    };
+    const RELEASES_PAGE = "https://github.com/ahhmilo/EasyTS/releases/latest";
+    const RELEASES_API  = "https://api.github.com/repos/ahhmilo/EasyTS/releases/latest";
+
+    function showUpdateBanner(latestVersion, currentVersion, isOld) {
+      const label = document.getElementById('update-version');
+      const curr  = document.getElementById('current-version-label');
+      const banner = document.getElementById('update-banner');
+
+      if (isOld) {
+        label.textContent = latestVersion;
+        curr.textContent  = "outdated version";
+        // Swap banner text for old-version case
+        document.getElementById('update-banner-left').innerHTML =
+          '⚠ You are using an <span>outdated version</span> of EasyTS. We strongly recommend updating to <span>' + latestVersion + '</span>.';
+      } else {
+        label.textContent = latestVersion;
+        curr.textContent  = currentVersion;
+      }
+
+      banner.classList.add('visible');
+      document.getElementById('btn-update-download').onclick = () => window.pywebview.api.open_url(RELEASES_PAGE);
+      document.getElementById('btn-update-dismiss').onclick  = () => banner.classList.remove('visible');
+    }
+
+    async function checkVersion() {
+      try {
+        // Fetch latest release from GitHub
+        const resp   = await fetch(RELEASES_API, { headers: { "User-Agent": "EasyTS" } });
+        const data   = await resp.json();
+        const latest = data.tag_name;
+        if (!latest) return;
+
+        // Try to get version from the exe — old exes won't have this method
+        let current = null;
+        try {
+          current = await window.pywebview.api.get_version();
+        } catch(e) {
+          current = null;
+        }
+
+        if (!current) {
+          // Old exe — no get_version() method
+          showUpdateBanner(latest, null, true);
+        } else if (current !== latest) {
+          // New exe but outdated version
+          showUpdateBanner(latest, current, false);
+        }
+        // If current === latest, do nothing
+      } catch(e) {
+        // No internet or API failed — silently ignore
+      }
+    }
 
     // ── Init ──────────────────────────────────────────────────────────────────
-    window.addEventListener('pywebviewready', refreshAccounts);
+    window.addEventListener('pywebviewready', () => {
+      refreshAccounts();
+      checkVersion();
+    });
   </script>
 
 </body>

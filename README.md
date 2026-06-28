@@ -8,7 +8,7 @@
 # EasyTS
 A lightweight Windows utility that instantly applies True-Stretch resolutions to VALORANT accounts without requiring manual configuration edits.
 
-EasyTS automatically handles resolution changes, fullscreen/windowed settings, stretch behavior, account management, and backups through a simple graphical interface.
+EasyTS automatically handles resolution changes, fullscreen/windowed settings, stretch behavior, account management, presets, and backups through a simple graphical interface.
 
 ---
 
@@ -25,12 +25,14 @@ EasyTS applies the stretched/fill behavior automatically.
 
 ## Features
 - Instant True-Stretch applying
-- Multi-account support with saved account switching
-- Automatic config backup system
-- One-click restore for previous settings
+- Multi-account support with saved account switcher
+- Resolution presets for quick re-applying
+- Automatic config backup system with one-click restore
+- VALORANT running detection — warns you before writing to a locked file
 - Automatic read-only handling
+- Automatic WebView2 check with guided install if missing
+- Automatic update checker on startup
 - Lightweight standalone executable
-- Live status log and cleaner error messages
 
 ---
 
@@ -49,28 +51,33 @@ EasyTS applies the stretched/fill behavior automatically.
 ## Requirements
 - Windows 10 or Windows 11
 - Riot Client installed and logged in
-- VALORANT installed
+- VALORANT installed and **closed** while using EasyTS
 - Microsoft WebView2 Runtime — pre-installed on Windows 11, may need manual install on Windows 10. EasyTS will prompt you automatically if it is missing.
 
 ---
 
 ## How to use EasyTS
+
 ### Applying True-Stretch to a new account
 1. Close VALORANT completely.
 2. Open EasyTS.
 3. Make sure Riot Client is open and logged into the desired account.
-4. Enter a resolution using the format `WIDTHxHEIGHT`
-   - Example: `1440x1080`
-5. Click **Start**
-6. Wait for the success confirmation in the log output
+4. Enter a resolution using the format `WIDTHxHEIGHT` — e.g. `1440x1080`
+5. Optionally save it as a preset for quick re-use later.
+6. Click **Start — Auto-detect Account**.
+7. Wait for the success confirmation in the log output.
 
 ### Using saved accounts
-After a successful apply, EasyTS automatically saves the account locally.
+After a successful apply, EasyTS saves the account automatically.
 
-Saved accounts appear inside the account switcher where you can:
-- Re-apply True-Stretch instantly
+Saved accounts appear in the account switcher where you can:
+- Re-apply True-Stretch with the current resolution in one click
 - Restore the latest backup
-- View the latest backup timestamp
+- View the last applied timestamp and backup date
+
+### Presets
+Type a resolution and click **+ Save current** to save it as a preset chip.
+Click a preset chip to instantly fill the resolution input.
 
 ---
 
@@ -91,11 +98,10 @@ If `GameUserSettings.ini` is marked as read-only, EasyTS removes the attribute a
 ---
 
 ## Backup System
-EasyTS automatically creates a backup before modifying a configuration file.
+EasyTS automatically creates a backup before modifying any configuration file.
 
 Backups are stored in:
-
-```text
+```
 %localappdata%\EasyTS\Backups\
 ```
 
@@ -116,7 +122,7 @@ Each account keeps:
 Because EasyTS is unsigned independent software, Windows Defender or SmartScreen may show a warning. This is common for unsigned applications.
 
 If SmartScreen appears:
-```text
+```
 More info -> Run anyway
 ```
 
@@ -138,10 +144,11 @@ Use at your own discretion.
 
 ### Why is True-Stretch not working?
 Check the following:
-- Your monitor supports custom resolutions
-- GPU scaling is enabled in NVIDIA Control Panel or AMD Software if necessary
+- Sometimes the fill mode might glitch — before running EasyTS, set your game to **Fullscreen** mode with **Fill** checked.
+- Your monitor supports custom resolutions.
+- GPU scaling is enabled in NVIDIA Control Panel or AMD Software if necessary.
 
-EasyTS attempts to configure these settings automatically, but some systems override them on launch.
+EasyTS attempts to configure these settings automatically, but some systems may override them on launch.
 
 ---
 
@@ -161,12 +168,12 @@ EasyTS attempts to configure these settings automatically, but some systems over
 Delete the executable.
 
 To completely undo changes:
-1. Use the built-in **Restore** button
-2. Or manually reset VALORANT video settings
+1. Use the built-in **Restore** button in the saved accounts section
+2. Or manually reset VALORANT video settings in-game
 3. Or delete `GameUserSettings.ini`
 
 Config location:
-```text
+```
 %localappdata%\VALORANT\Saved\Config\
 ```
 
@@ -176,8 +183,7 @@ Deleting the config file will also reset graphics settings.
 
 ### My question is not listed here
 Open an issue on GitHub or contact me on Discord:
-
-```text
+```
 vestryman
 ```
 

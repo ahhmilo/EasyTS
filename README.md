@@ -39,6 +39,7 @@ EasyTS applies the stretched/fill behavior automatically.
 - Automatic WebView2 check with guided install if missing
 - Automatic update checker on startup
 - Lightweight standalone executable
+- Black bars fix for laptop users via registry scaling
 
 ---
 

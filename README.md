@@ -20,7 +20,7 @@ EasyTS automatically handles resolution changes, fullscreen/windowed settings, s
 
 ## True-Stretched in action
 
-| Without True-Stretcedh | With True-Stretched |
+| Without True-Stretched | With True-Stretched |
 |---|---|
 | ![](https://files.catbox.moe/3wxgnu.png) | ![](https://files.catbox.moe/cr3qnr.png) |
 

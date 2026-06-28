@@ -3,6 +3,7 @@
 [![HTML](https://img.shields.io/badge/language-HTML-E34F26?logo=html5&logoColor=white&labelColor=555555)](#)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](#)
 
+| Main page | Settings page |
 |---|---|
 | ![](https://files.catbox.moe/plle0l.png) | ![](https://files.catbox.moe/nbugml.png) |
 

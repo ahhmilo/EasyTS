@@ -12,15 +12,15 @@ Click to expand.
 ---
 
 # EasyTS
-A lightweight Windows utility that instantly applies True-Stretch resolutions to VALORANT accounts without requiring manual configuration edits.
+A lightweight Windows utility that instantly applies True-Stretched resolutions to VALORANT accounts without requiring manual configuration edits.
 
 EasyTS automatically handles resolution changes, fullscreen/windowed settings, stretch behavior, account management, presets, and backups through a simple graphical interface.
 
 ---
 
-## True-Stretch in action
+## True-Stretched in action
 
-| Without True-Stretch | With True-Stretch |
+| Without True-Stretcedh | With True-Stretched |
 |---|---|
 | ![](https://files.catbox.moe/3wxgnu.png) | ![](https://files.catbox.moe/cr3qnr.png) |
 
@@ -30,7 +30,7 @@ EasyTS applies the stretched/fill behavior automatically.
 ---
 
 ## Features
-- Instant True-Stretch applying
+- Instant True-Stretched applying
 - Multi-account support with saved account switcher
 - Resolution presets for quick re-applying
 - Automatic config backup system with one-click restore
@@ -65,7 +65,7 @@ EasyTS applies the stretched/fill behavior automatically.
 
 ## How to use EasyTS
 
-### Applying True-Stretch to a new account
+### Applying True-Stretched to a new account
 1. Close VALORANT completely.
 2. Open EasyTS.
 3. Make sure Riot Client is open and logged into the desired account.
@@ -78,7 +78,7 @@ EasyTS applies the stretched/fill behavior automatically.
 After a successful apply, EasyTS saves the account automatically.
 
 Saved accounts appear in the account switcher where you can:
-- Re-apply True-Stretch with the current resolution in one click
+- Re-apply True-Stretched with the current resolution in one click
 - Restore the latest backup
 - View the last applied timestamp and backup date
 

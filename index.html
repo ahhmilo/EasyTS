@@ -142,6 +142,23 @@
     #btn-fix-blackbars:active { opacity: 0.8; }
     #btn-fix-blackbars:disabled { opacity: 0.35; cursor: not-allowed; }
 
+    #blackbars-toggle {
+      background: transparent; border: none; cursor: pointer;
+      color: var(--muted); padding: 2px 4px; border-radius: 4px;
+      display: flex; align-items: center;
+      transition: color 0.15s;
+    }
+    #blackbars-toggle:hover { color: var(--text); }
+    #blackbars-toggle svg {
+      width: 12px; height: 12px;
+      stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+      fill: none;
+      transition: transform 0.2s ease;
+    }
+    #blackbars-toggle.collapsed svg { transform: rotate(-90deg); }
+    #blackbars-body { overflow: hidden; transition: max-height 0.25s ease; max-height: 300px; }
+    #blackbars-body.collapsed { max-height: 0; }
+
     /* SETTINGS PAGE */
     #page-settings { padding: 24px 40px 28px; gap: 0; }
 
@@ -384,6 +401,23 @@
     #btn-fix-blackbars:active { opacity: 0.8; }
     #btn-fix-blackbars:disabled { opacity: 0.35; cursor: not-allowed; }
 
+    #blackbars-toggle {
+      background: transparent; border: none; cursor: pointer;
+      color: var(--muted); padding: 2px 4px; border-radius: 4px;
+      display: flex; align-items: center;
+      transition: color 0.15s;
+    }
+    #blackbars-toggle:hover { color: var(--text); }
+    #blackbars-toggle svg {
+      width: 12px; height: 12px;
+      stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+      fill: none;
+      transition: transform 0.2s ease;
+    }
+    #blackbars-toggle.collapsed svg { transform: rotate(-90deg); }
+    #blackbars-body { overflow: hidden; transition: max-height 0.25s ease; max-height: 300px; }
+    #blackbars-body.collapsed { max-height: 0; }
+
     /* SETTINGS PAGE */
     .settings-card {
       width: 100%; max-width: 560px;
@@ -508,21 +542,28 @@
 
 
     <!-- Black Bars Fix -->
-    <div id="blackbars-card">
-      <div id="blackbars-header">
+    <div id="blackbars-card" style="display:none;">
+      <div id="blackbars-header" style="cursor:pointer;" onclick="toggleBlackBars()">
         <div id="blackbars-title">Fix Black Bars</div>
-        <div id="blackbars-badge">Recommended for laptops</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <div id="blackbars-badge">Recommended for laptops</div>
+          <button id="blackbars-toggle" onclick="event.stopPropagation();toggleBlackBars()">
+            <svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg>
+          </button>
+        </div>
       </div>
-      <div id="blackbars-notes">
-        Some systems display black bars on the sides when using a custom resolution.
-        This fix sets the display scaling to <span>Full Panel</span> in the Windows Registry,
-        forcing the screen to stretch the image correctly.<br><br>
-        <span>⚠ Requires administrator permissions</span> — a UAC prompt will appear.<br>
-        <span>⚠ A PC restart is required</span> after applying.<br>
-        May not work on all systems. Best results on <span>Intel</span> and <span>AMD</span> integrated graphics.
-        NVIDIA users should use <span>NVIDIA Control Panel → GPU Scaling → Full Screen</span> instead.
+      <div id="blackbars-body">
+        <div id="blackbars-notes">
+          Some systems display black bars on the sides when using a custom resolution.
+          This fix sets the display scaling to <span>Full Panel</span> in the Windows Registry,
+          forcing the screen to stretch the image correctly.<br><br>
+          <span>⚠ Requires administrator permissions</span> — a UAC prompt will appear.<br>
+          <span>⚠ A PC restart is required</span> after applying.<br>
+          May not work on all systems. Best results on <span>Intel</span> and <span>AMD</span> integrated graphics.
+          NVIDIA users should use <span>NVIDIA Control Panel → GPU Scaling → Full Screen</span> instead.
+        </div>
+        <button id="btn-fix-blackbars">Fix Black Bars</button>
       </div>
-      <button id="btn-fix-blackbars">Fix Black Bars</button>
     </div>
 
     <div id="accounts-section">
@@ -776,6 +817,25 @@
       () => window.pywebview.api.open_url(RELEASES_PAGE));
 
     // ── Black bars fix ────────────────────────────────────────────────────────
+    let bbCollapsed = false;
+    function toggleBlackBars() {
+      bbCollapsed = !bbCollapsed;
+      document.getElementById('blackbars-body').classList.toggle('collapsed', bbCollapsed);
+      document.getElementById('blackbars-toggle').classList.toggle('collapsed', bbCollapsed);
+    }
+
+    async function initBlackBarsSection() {
+      try {
+        const needed = await window.pywebview.api.check_black_bars_needed();
+        if (needed) {
+          document.getElementById('blackbars-card').style.display = 'block';
+        }
+      } catch(e) {
+        // old exe or error — hide section
+      }
+    }
+
+    // ── Black bars fix ────────────────────────────────────────────────────────
     document.getElementById('btn-fix-blackbars').addEventListener('click', async () => {
       addLog('Launching black bars fix — accept the UAC prompt to continue...', 'info');
       try {
@@ -823,6 +883,7 @@
       refreshAccounts();
       refreshPresets();
       checkVersion();
+      initBlackBarsSection();
       try {
         const v = await window.pywebview.api.get_version();
         document.getElementById('settings-version-label').textContent = v;

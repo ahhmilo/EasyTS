@@ -18,7 +18,8 @@ import webbrowser
 import tkinter as tk
 from typing import Optional, Tuple
 
-CURRENT_VERSION = "v2.3.0"
+CURRENT_VERSION = "v2.4.0"
+GITHUB_URL      = "https://github.com/ahhmilo/EasyTS"
 
 WEBVIEW2_DOWNLOAD_URL = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
 WEBVIEW2_REGISTRY_KEYS = [
@@ -49,6 +50,9 @@ def get_easysts_dir() -> str:
 def get_accounts_path() -> str:
     return os.path.join(get_easysts_dir(), "accounts.json")
 
+def get_presets_path() -> str:
+    return os.path.join(get_easysts_dir(), "presets.json")
+
 def load_accounts() -> list:
     path = get_accounts_path()
     if not os.path.isfile(path):
@@ -75,6 +79,20 @@ def upsert_account(name_tag: str, folder: str) -> None:
         accounts.append({"name_tag": name_tag, "folder": folder, "last_applied": now})
     save_accounts(accounts)
 
+def load_presets() -> list:
+    path = get_presets_path()
+    if not os.path.isfile(path):
+        return []
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def save_presets(presets: list) -> None:
+    with open(get_presets_path(), "w", encoding="utf-8") as f:
+        json.dump(presets, f, indent=2, ensure_ascii=False)
+
 def get_backup_path(folder: str, create_dir: bool = True) -> str:
     backup_dir = os.path.join(get_easysts_dir(), "Backups", folder)
     if create_dir:
@@ -90,6 +108,16 @@ def get_backup_date(folder: str) -> Optional[str]:
         return None
     return time.strftime("%Y-%m-%d %H:%M", time.localtime(os.path.getmtime(path)))
 
+
+def is_valorant_running() -> bool:
+    try:
+        result = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq VALORANT-Win64-Shipping.exe", "/NH"],
+            capture_output=True, text=True
+        )
+        return "VALORANT-Win64-Shipping.exe" in result.stdout
+    except Exception:
+        return False
 
 def get_valorant_config_path() -> str:
     localappdata = os.environ.get("LOCALAPPDATA")
@@ -359,9 +387,50 @@ class Api:
             acc["backup_date"] = get_backup_date(acc["folder"])
         return accounts
 
+    def clear_accounts(self) -> dict:
+        try:
+            save_accounts([])
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+    def open_backup_folder(self) -> None:
+        folder = os.path.join(get_easysts_dir(), "Backups")
+        os.makedirs(folder, exist_ok=True)
+        subprocess.Popen(["explorer", folder])
+
+    def get_presets(self) -> list:
+        return load_presets()
+
+    def save_preset(self, name: str, resolution: str) -> dict:
+        presets = load_presets()
+        for p in presets:
+            if p["name"] == name:
+                p["resolution"] = resolution
+                save_presets(presets)
+                return {"success": True}
+        presets.append({"name": name, "resolution": resolution})
+        save_presets(presets)
+        return {"success": True}
+
+    def delete_preset(self, name: str) -> dict:
+        presets = [p for p in load_presets() if p["name"] != name]
+        save_presets(presets)
+        return {"success": True}
+
+    def _check_valorant_not_running(self) -> bool:
+        if is_valorant_running():
+            log_to_ui(self._window,
+                      "VALORANT is currently running. Please close it before applying.", "error")
+            return False
+        return True
+
     def apply_stretched(self, resolution_str: str) -> dict:
         match = re.match(r"^(\d{3,4})x(\d{3,4})$", resolution_str.strip().lower())
         if not match:
+            return {"success": False}
+
+        if not self._check_valorant_not_running():
             return {"success": False}
 
         width  = int(match.group(1))
@@ -433,6 +502,9 @@ class Api:
         match = re.match(r"^(\d{3,4})x(\d{3,4})$", resolution_str.strip().lower())
         if not match:
             log_to_ui(self._window, "Invalid resolution format.", "error")
+            return {"success": False}
+
+        if not self._check_valorant_not_running():
             return {"success": False}
 
         width  = int(match.group(1))

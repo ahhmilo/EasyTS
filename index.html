@@ -22,7 +22,6 @@
       --text:        #e8e8e8;
       --muted:       #7a7a7a;
       --muted2:      #484848;
-      --success:     #4ade80;
       --close-hover: #ff4655;
     }
 
@@ -35,88 +34,76 @@
       user-select: none;
     }
 
-    /* ── HEADER ── */
+    /* HEADER */
     #header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 46px;
-      padding: 0 12px 0 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 46px; padding: 0 12px 0 18px;
       background: var(--header);
       border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      flex-shrink: 0; position: relative; z-index: 20;
     }
-
     #header-left { display: flex; align-items: center; gap: 9px; }
-
     #logo-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 10px var(--accent);
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 10px var(--accent);
       animation: breathe 3s ease-in-out infinite;
     }
     @keyframes breathe {
       0%,100% { box-shadow: 0 0 8px var(--accent); }
       50%      { box-shadow: 0 0 18px var(--accent); }
     }
-
     #app-title {
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px; font-weight: 500;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
+      letter-spacing: 0.15em; text-transform: uppercase;
     }
-
     .window-controls { display: flex; gap: 6px; }
-
     .window-btn {
-      width: 28px; height: 28px;
-      border-radius: 6px;
-      border: 1px solid var(--border2);
-      background: transparent;
-      color: var(--muted);
-      cursor: pointer;
+      width: 28px; height: 28px; border-radius: 6px;
+      border: 1px solid var(--border2); background: transparent;
+      color: var(--muted); cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
-    .window-btn:hover        { background: var(--surface2); color: var(--text); }
-    #btn-close:hover         { background: var(--close-hover); border-color: var(--close-hover); color: #fff; }
-    .window-btn svg          { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+    .window-btn:hover       { background: var(--surface2); color: var(--text); }
+    #btn-close:hover        { background: var(--close-hover); border-color: var(--close-hover); color: #fff; }
+    #btn-settings.active    { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+    .window-btn svg         { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
 
-    /* ── SCROLL AREA ── */
-    #content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    /* PAGES */
+    .page {
+      display: none; flex-direction: column; align-items: center;
       height: calc(100vh - 46px);
-      padding: 24px 40px 20px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      gap: 0;
+      overflow-y: auto; overflow-x: hidden;
     }
-    #content::-webkit-scrollbar { width: 4px; }
-    #content::-webkit-scrollbar-track { background: transparent; }
-    #content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    .page.active { display: flex; }
+    .page::-webkit-scrollbar { width: 4px; }
+    .page::-webkit-scrollbar-track { background: transparent; }
+    .page::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-    /* ── TITLE ── */
+    /* MAIN PAGE */
+    #page-main { padding: 24px 40px 20px; gap: 0; }
+
+    /* SETTINGS PAGE */
+    #page-settings { padding: 24px 40px 28px; gap: 0; }
+
+    /* TITLE */
     #title-block { text-align: center; margin-bottom: 18px; flex-shrink: 0; }
     #app-name { font-size: 44px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
     #app-name span { color: var(--accent); }
     #app-tagline { margin-top: 7px; font-size: 12px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
 
-    /* ── DIVIDER ── */
+    /* DIVIDER */
     .divider { width: 100%; max-width: 560px; height: 1px; background: var(--border); flex-shrink: 0; }
 
-    /* ── SECTION LABEL ── */
+    /* SECTION LABEL */
     .section-label {
       width: 100%; max-width: 560px;
       display: flex; align-items: center; gap: 7px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--muted2);
-      margin: 16px 0 8px;
-      flex-shrink: 0;
+      margin: 16px 0 8px; flex-shrink: 0;
     }
     .section-label::before {
       content: ''; display: inline-block;
@@ -124,225 +111,221 @@
       border-radius: 50%; background: var(--muted2);
     }
 
-    /* ── RESOLUTION INPUT ── */
+    /* UPDATE BANNER */
+    #update-banner {
+      display: none; width: 100%; max-width: 560px;
+      margin-bottom: 10px; flex-shrink: 0;
+      align-items: center; justify-content: space-between; gap: 10px;
+      padding: 9px 14px;
+      background: rgba(255,170,0,0.07);
+      border: 1px solid rgba(255,170,0,0.25);
+      border-radius: 10px;
+      animation: fadeIn 0.3s ease;
+    }
+    #update-banner.visible { display: flex; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+    #update-banner-left { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #ccc; min-width: 0; }
+    #update-banner-left::before { content:'↑'; font-size:13px; font-weight:700; color:#ffaa00; flex-shrink:0; }
+    #update-banner-left span { color:#ffaa00; font-weight:600; }
+    #update-banner-right { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    #btn-update-download {
+      height:26px; padding:0 12px; border-radius:6px;
+      border:1px solid rgba(255,170,0,0.4); background:transparent;
+      color:#ffaa00; font-family:'Outfit',sans-serif;
+      font-size:11px; font-weight:600; cursor:pointer;
+      transition:background 0.15s;
+    }
+    #btn-update-download:hover { background:rgba(255,170,0,0.12); }
+    #btn-update-dismiss {
+      height:26px; width:26px; border-radius:6px;
+      border:1px solid var(--border2); background:transparent;
+      color:var(--muted2); font-size:14px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:background 0.15s, color 0.15s;
+    }
+    #btn-update-dismiss:hover { background:var(--surface2); color:var(--text); }
+
+    /* RESOLUTION INPUT */
     .input-wrapper {
       width: 100%; max-width: 560px;
       display: flex; align-items: center;
-      height: 48px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      height: 48px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px;
       padding: 0 16px;
       transition: border-color 0.2s, box-shadow 0.2s;
       flex-shrink: 0;
     }
-    .input-wrapper:focus-within {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-dim);
-    }
+    .input-wrapper:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
     .input-wrapper input {
       width: 100%; height: 100%;
       background: transparent; border: none; outline: none;
-      font-family: 'Outfit', sans-serif;
-      font-size: 14px; color: var(--text);
-      user-select: text;
-      caret-color: var(--accent);
+      font-family: 'Outfit', sans-serif; font-size: 14px; color: var(--text);
+      user-select: text; caret-color: var(--accent);
     }
     .input-wrapper input::placeholder { color: var(--muted2); }
 
-    /* ── START BUTTON ── */
+    /* PRESETS */
+    #presets-wrap { width: 100%; max-width: 560px; flex-shrink: 0; }
+    #presets-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .preset-chip {
+      display: flex; align-items: center; gap: 0;
+      height: 28px; border-radius: 6px;
+      border: 1px solid var(--border2); background: var(--surface);
+      overflow: hidden; flex-shrink: 0;
+    }
+    .preset-chip-label {
+      padding: 0 10px; font-size: 12px; font-weight: 500;
+      color: var(--text); cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      height: 100%; display: flex; align-items: center;
+    }
+    .preset-chip-label:hover { background: var(--accent-dim); color: var(--accent); }
+    .preset-chip-del {
+      width: 24px; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: var(--muted2); cursor: pointer;
+      border-left: 1px solid var(--border2);
+      transition: background 0.15s, color 0.15s;
+    }
+    .preset-chip-del:hover { background: rgba(255,70,85,0.12); color: var(--accent); }
+    #preset-save-btn {
+      height: 28px; padding: 0 12px; border-radius: 6px;
+      border: 1px dashed var(--border2); background: transparent;
+      color: var(--muted2); font-family: 'Outfit', sans-serif;
+      font-size: 12px; cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    #preset-save-btn:hover { border-color: var(--accent); color: var(--accent); }
+    #presets-empty { font-size: 11px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; }
+
+    /* START BUTTON */
     #btn-start {
       width: 100%; max-width: 560px; height: 46px;
-      margin-top: 10px;
-      border-radius: 10px; border: none;
+      margin-top: 10px; border-radius: 10px; border: none;
       background: var(--accent); color: #fff;
       font-family: 'Outfit', sans-serif;
       font-size: 14px; font-weight: 600; letter-spacing: 0.04em;
       cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: opacity 0.15s, transform 0.1s, box-shadow 0.2s;
-      box-shadow: 0 4px 24px var(--accent-glow);
-      flex-shrink: 0;
+      box-shadow: 0 4px 24px var(--accent-glow); flex-shrink: 0;
     }
-    #btn-start:hover   { opacity: 0.88; box-shadow: 0 6px 32px var(--accent-glow); }
-    #btn-start:active  { transform: scale(0.985); }
+    #btn-start:hover    { opacity: 0.88; box-shadow: 0 6px 32px var(--accent-glow); }
+    #btn-start:active   { transform: scale(0.985); }
     #btn-start:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
-    #btn-start svg     { width: 12px; height: 12px; fill: #fff; }
+    #btn-start svg      { width: 12px; height: 12px; fill: #fff; }
 
-    /* ── ACCOUNTS LIST ── */
-    #accounts-section {
-      width: 100%; max-width: 560px;
-      flex-shrink: 0;
-    }
-
+    /* ACCOUNTS */
+    #accounts-section { width: 100%; max-width: 560px; flex-shrink: 0; }
     #accounts-list { display: flex; flex-direction: column; gap: 6px; }
-
     .account-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       padding: 10px 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      transition: border-color 0.15s;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; transition: border-color 0.15s;
     }
     .account-row:hover { border-color: var(--border2); }
-
-    .account-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--accent);
-      opacity: 0.6;
-      flex-shrink: 0;
-    }
-
+    .account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); opacity: 0.6; flex-shrink: 0; }
     .account-info { flex: 1; min-width: 0; }
-
-    .account-name {
-      font-size: 13px; font-weight: 500;
-      color: var(--text);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    .account-meta {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9.5px; color: var(--muted2);
-      margin-top: 2px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
+    .account-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .account-meta { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--muted2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .account-actions { display: flex; gap: 6px; flex-shrink: 0; }
-
     .acc-btn {
-      height: 28px;
-      padding: 0 12px;
-      border-radius: 6px;
-      border: 1px solid var(--border2);
-      background: transparent;
-      font-family: 'Outfit', sans-serif;
-      font-size: 11px; font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      height: 28px; padding: 0 12px; border-radius: 6px;
+      border: 1px solid var(--border2); background: transparent;
+      font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
       white-space: nowrap;
     }
-
-    .acc-btn-apply {
-      color: var(--accent);
-      border-color: rgba(255,70,85,0.3);
-    }
-    .acc-btn-apply:hover {
-      background: var(--accent-dim);
-      border-color: var(--accent);
-    }
+    .acc-btn-apply { color: var(--accent); border-color: rgba(255,70,85,0.3); }
+    .acc-btn-apply:hover { background: var(--accent-dim); border-color: var(--accent); }
     .acc-btn-apply:disabled { opacity: 0.3; cursor: not-allowed; }
-
-    .acc-btn-restore {
-      color: var(--muted);
-    }
-    .acc-btn-restore:hover:not(:disabled) {
-      background: var(--surface2);
-      color: var(--text);
-      border-color: var(--border2);
-    }
+    .acc-btn-restore { color: var(--muted); }
+    .acc-btn-restore:hover:not(:disabled) { background: var(--surface2); color: var(--text); border-color: var(--border2); }
     .acc-btn-restore:disabled { opacity: 0.25; cursor: not-allowed; }
-
     #accounts-empty {
-      width: 100%;
-      padding: 14px;
-      text-align: center;
+      width: 100%; padding: 14px; text-align: center;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px; color: var(--muted2);
-      letter-spacing: 0.08em;
-      background: var(--surface);
-      border: 1px dashed var(--border);
-      border-radius: 10px;
+      font-size: 10px; color: var(--muted2); letter-spacing: 0.08em;
+      background: var(--surface); border: 1px dashed var(--border); border-radius: 10px;
     }
 
-    /* ── LOG CONSOLE ── */
+    /* LOG */
     #log-wrap { width: 100%; max-width: 560px; margin-top: 14px; flex-shrink: 0; }
-
     #log-console {
-      width: 100%;
-      background: #0a0a0a;
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      width: 100%; background: #0a0a0a;
+      border: 1px solid var(--border); border-radius: 10px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px; color: #ccc;
-      padding: 12px;
-      height: 130px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      user-select: text;
+      font-size: 11px; color: #ccc; padding: 12px;
+      height: 130px; overflow-y: auto;
+      white-space: pre-wrap; word-break: break-word; user-select: text;
     }
     #log-console::-webkit-scrollbar { width: 3px; }
     #log-console::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
     .log-entry   { margin: 2px 0; line-height: 1.5; }
     .log-success { color: #4ade80; }
     .log-error   { color: #ff6b6b; }
     .log-info    { color: #9cdcfe; }
     .log-muted   { color: var(--muted2); }
 
-    /* ── UPDATE BANNER ── */
-    #update-banner {
-      display: none;
+    /* SETTINGS PAGE */
+    .settings-card {
       width: 100%; max-width: 560px;
-      margin-bottom: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
       flex-shrink: 0;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 9px 14px;
-      background: rgba(255, 170, 0, 0.07);
-      border: 1px solid rgba(255, 170, 0, 0.25);
-      border-radius: 10px;
-      animation: fadeIn 0.3s ease;
+      margin-bottom: 12px;
     }
-    #update-banner.visible { display: flex; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-
-    #update-banner-left {
-      display: flex; align-items: center; gap: 8px;
-      font-size: 12px; color: #cccccc;
-      min-width: 0;
+    .settings-card-title {
+      padding: 12px 16px 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted2);
+      border-bottom: 1px solid var(--border);
     }
-    #update-banner-left::before {
-      content: '↑';
-      font-size: 13px; font-weight: 700;
-      color: #ffaa00;
-      flex-shrink: 0;
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
     }
-    #update-banner-left span { color: #ffaa00; font-weight: 600; }
-
-    #update-banner-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-
-    #btn-update-download {
-      height: 26px; padding: 0 12px;
-      border-radius: 6px;
-      border: 1px solid rgba(255,170,0,0.4);
-      background: transparent;
-      color: #ffaa00;
-      font-family: 'Outfit', sans-serif;
-      font-size: 11px; font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row-label { font-size: 13px; color: var(--text); }
+    .settings-row-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .settings-btn {
+      height: 30px; padding: 0 14px; border-radius: 7px;
+      border: 1px solid var(--border2); background: transparent;
+      color: var(--text); font-family: 'Outfit', sans-serif;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap; flex-shrink: 0;
     }
-    #btn-update-download:hover { background: rgba(255,170,0,0.12); }
+    .settings-btn:hover { background: var(--surface2); border-color: var(--border2); }
+    .settings-btn-danger { color: #ff6b6b; border-color: rgba(255,107,107,0.3); }
+    .settings-btn-danger:hover { background: rgba(255,107,107,0.08); border-color: #ff6b6b; }
+    .settings-btn-accent { color: var(--accent); border-color: rgba(255,70,85,0.3); }
+    .settings-btn-accent:hover { background: var(--accent-dim); border-color: var(--accent); }
 
-    #btn-update-dismiss {
-      height: 26px; width: 26px;
-      border-radius: 6px;
-      border: 1px solid var(--border2);
-      background: transparent;
-      color: var(--muted2);
-      font-size: 14px; line-height: 1;
-      cursor: pointer;
+    .about-creator {
+      display: flex; align-items: center; gap: 12px;
+      padding: 18px 16px;
+    }
+    .about-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--accent-dim);
+      border: 1px solid rgba(255,70,85,0.3);
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s, color 0.15s;
+      font-size: 16px; flex-shrink: 0;
     }
-    #btn-update-dismiss:hover { background: var(--surface2); color: var(--text); }
+    .about-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .about-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .about-actions { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; }
+
+    .settings-version {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: var(--muted2);
+    }
   </style>
 </head>
 <body>
@@ -353,6 +336,12 @@
       <div id="app-title">EasyTS</div>
     </div>
     <div class="window-controls">
+      <button class="window-btn" id="btn-settings" title="Settings">
+        <svg viewBox="0 0 12 12" fill="none">
+          <circle cx="6" cy="6" r="2"/>
+          <path d="M6 1v1M6 10v1M1 6h1M10 6h1M2.5 2.5l.7.7M8.8 8.8l.7.7M9.5 2.5l-.7.7M3.2 8.8l-.7.7" stroke-linecap="round"/>
+        </svg>
+      </button>
       <button class="window-btn" id="btn-minimize" title="Minimize">
         <svg viewBox="0 0 12 12" fill="none"><line x1="2" y1="6" x2="10" y2="6"/></svg>
       </button>
@@ -365,7 +354,8 @@
     </div>
   </header>
 
-  <main id="content">
+  <!-- MAIN PAGE -->
+  <main id="page-main" class="page active">
 
     <div id="title-block">
       <div id="app-name">Easy<span>TS</span></div>
@@ -374,7 +364,6 @@
 
     <div class="divider"></div>
 
-    <!-- Update banner (hidden until version check fires) -->
     <div id="update-banner">
       <div id="update-banner-left">Update available: <span id="update-version"></span> — you are on <span id="current-version-label"></span></div>
       <div id="update-banner-right">
@@ -383,19 +372,24 @@
       </div>
     </div>
 
-    <!-- Resolution -->
     <div class="section-label">Resolution</div>
     <div class="input-wrapper">
       <input type="text" id="resolution-input" placeholder="e.g. 1440x1080" autocomplete="off" spellcheck="false"/>
     </div>
 
-    <!-- Start (auto-detect) -->
+    <div id="presets-wrap">
+      <div class="section-label">
+        Presets
+        <button id="preset-save-btn" style="margin-left:auto;">+ Save current</button>
+      </div>
+      <div id="presets-list"><span id="presets-empty">No presets saved yet.</span></div>
+    </div>
+
     <button id="btn-start">
       <svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>
       Start — Auto-detect Account
     </button>
 
-    <!-- Saved accounts -->
     <div id="accounts-section">
       <div class="section-label">Saved Accounts</div>
       <div id="accounts-list">
@@ -403,7 +397,6 @@
       </div>
     </div>
 
-    <!-- Log -->
     <div id="log-wrap">
       <div class="section-label">Log</div>
       <div id="log-console">
@@ -413,15 +406,86 @@
 
   </main>
 
+  <!-- SETTINGS PAGE -->
+  <div id="page-settings" class="page">
+
+    <div class="section-label" style="margin-top:0;">About</div>
+
+    <div class="settings-card">
+      <div class="about-creator">
+        <div class="about-avatar">⚡</div>
+        <div>
+          <div class="about-name">ahhmilo</div>
+          <div class="about-sub">Creator of EasyTS</div>
+        </div>
+        <div class="about-actions">
+          <button class="settings-btn settings-btn-accent" id="btn-github">GitHub</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Data</div>
+
+    <div class="settings-card">
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Open Backup Folder</div>
+          <div class="settings-row-sub">%localappdata%\EasyTS\Backups</div>
+        </div>
+        <button class="settings-btn" id="btn-open-backups">Open</button>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Clear Saved Accounts</div>
+          <div class="settings-row-sub">Removes all saved accounts from EasyTS. Does not affect your config files.</div>
+        </div>
+        <button class="settings-btn settings-btn-danger" id="btn-clear-accounts">Clear</button>
+      </div>
+    </div>
+
+    <div class="section-label">Version</div>
+
+    <div class="settings-card">
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Current Version</div>
+        </div>
+        <span class="settings-version" id="settings-version-label">—</span>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Latest Release</div>
+          <div class="settings-row-sub">Opens the GitHub releases page</div>
+        </div>
+        <button class="settings-btn" id="btn-latest-release">Open</button>
+      </div>
+    </div>
+
+  </div>
+
   <script>
     const resInput   = document.getElementById('resolution-input');
     const startBtn   = document.getElementById('btn-start');
     const logConsole = document.getElementById('log-console');
 
+    const RELEASES_PAGE = "https://github.com/ahhmilo/EasyTS/releases/latest";
+    const RELEASES_API  = "https://api.github.com/repos/ahhmilo/EasyTS/releases/latest";
+    const GITHUB_PAGE   = "https://github.com/ahhmilo/EasyTS";
+
+    // ── Page switching ────────────────────────────────────────────────────────
+    const settingsBtn = document.getElementById('btn-settings');
+    let settingsOpen  = false;
+
+    settingsBtn.addEventListener('click', () => {
+      settingsOpen = !settingsOpen;
+      document.getElementById('page-main').classList.toggle('active', !settingsOpen);
+      document.getElementById('page-settings').classList.toggle('active', settingsOpen);
+      settingsBtn.classList.toggle('active', settingsOpen);
+    });
+
     // ── Logging ───────────────────────────────────────────────────────────────
     function addLog(message, type = 'info') {
-      const lines = String(message).split('\n');
-      lines.forEach(line => {
+      String(message).split('\n').forEach(line => {
         if (!line.trim()) return;
         const div = document.createElement('div');
         div.className = `log-entry log-${type}`;
@@ -430,7 +494,6 @@
       });
       logConsole.scrollTop = logConsole.scrollHeight;
     }
-
     window.appendLog = (message, type) => addLog(message, type);
 
     // ── Button state ──────────────────────────────────────────────────────────
@@ -439,11 +502,49 @@
       document.querySelectorAll('.acc-btn').forEach(b => b.disabled = running);
     }
 
-    // ── Accounts list ─────────────────────────────────────────────────────────
+    // ── Presets ───────────────────────────────────────────────────────────────
+    async function refreshPresets() {
+      const presets = await window.pywebview.api.get_presets();
+      const list    = document.getElementById('presets-list');
+      list.innerHTML = '';
+
+      if (!presets || presets.length === 0) {
+        list.innerHTML = '<span id="presets-empty">No presets saved yet.</span>';
+        return;
+      }
+
+      presets.forEach(p => {
+        const chip = document.createElement('div');
+        chip.className = 'preset-chip';
+        chip.innerHTML = `
+          <div class="preset-chip-label" title="${p.resolution}">${p.name}</div>
+          <div class="preset-chip-del" title="Delete preset">✕</div>
+        `;
+        chip.querySelector('.preset-chip-label').addEventListener('click', () => {
+          resInput.value = p.resolution;
+        });
+        chip.querySelector('.preset-chip-del').addEventListener('click', async () => {
+          await window.pywebview.api.delete_preset(p.name);
+          refreshPresets();
+        });
+        list.appendChild(chip);
+      });
+    }
+
+    document.getElementById('preset-save-btn').addEventListener('click', async () => {
+      const resolution = resInput.value.trim();
+      if (!resolution) { addLog('Enter a resolution first to save as preset.', 'error'); return; }
+      if (!/^\d{3,4}x\d{3,4}$/i.test(resolution)) { addLog('Invalid format. Use WIDTHxHEIGHT', 'error'); return; }
+      const name = resolution;
+      await window.pywebview.api.save_preset(name, resolution);
+      refreshPresets();
+    });
+
+    // ── Accounts ──────────────────────────────────────────────────────────────
     async function refreshAccounts() {
       const accounts = await window.pywebview.api.get_accounts();
-      const list     = document.getElementById('accounts-list');
-      list.innerHTML  = '';
+      const list = document.getElementById('accounts-list');
+      list.innerHTML = '';
 
       if (!accounts || accounts.length === 0) {
         list.innerHTML = '<div id="accounts-empty">No saved accounts yet. Run Start to add one.</div>';
@@ -453,28 +554,24 @@
       accounts.forEach(acc => {
         const row = document.createElement('div');
         row.className = 'account-row';
-
         const hasBackup = !!acc.backup_date;
-        const metaText  = `Last applied: ${acc.last_applied || '—'}${hasBackup ? '  ·  Backup: ' + acc.backup_date : ''}`;
-
+        const meta = `Last applied: ${acc.last_applied || '—'}${hasBackup ? '  ·  Backup: ' + acc.backup_date : ''}`;
         row.innerHTML = `
           <div class="account-dot"></div>
           <div class="account-info">
             <div class="account-name">${acc.name_tag}</div>
-            <div class="account-meta">${metaText}</div>
+            <div class="account-meta">${meta}</div>
           </div>
           <div class="account-actions">
-            <button class="acc-btn acc-btn-apply" data-folder="${acc.folder}">Apply</button>
-            <button class="acc-btn acc-btn-restore" data-folder="${acc.folder}" ${!hasBackup ? 'disabled title="No backup available"' : 'title="Restore backup from ' + acc.backup_date + '"'}>Restore</button>
+            <button class="acc-btn acc-btn-apply">Apply</button>
+            <button class="acc-btn acc-btn-restore" ${!hasBackup ? 'disabled title="No backup available"' : ''}>Restore</button>
           </div>
         `;
-
         row.querySelector('.acc-btn-apply').addEventListener('click', () => applyToSaved(acc.folder));
         row.querySelector('.acc-btn-restore').addEventListener('click', () => restoreAccount(acc.folder));
         list.appendChild(row);
       });
     }
-
     window.refreshAccounts = refreshAccounts;
 
     // ── Apply (auto-detect) ───────────────────────────────────────────────────
@@ -482,7 +579,6 @@
       const resolution = resInput.value.trim();
       if (!resolution) { addLog('Please enter a resolution.', 'error'); return; }
       if (!/^\d{3,4}x\d{3,4}$/i.test(resolution)) { addLog('Invalid format. Use WIDTHxHEIGHT (e.g. 1440x1080)', 'error'); return; }
-
       logConsole.innerHTML = '';
       addLog(`Starting with resolution ${resolution}...`, 'info');
       setRunning(true);
@@ -500,7 +596,6 @@
       const resolution = resInput.value.trim();
       if (!resolution) { addLog('Please enter a resolution first.', 'error'); return; }
       if (!/^\d{3,4}x\d{3,4}$/i.test(resolution)) { addLog('Invalid format. Use WIDTHxHEIGHT (e.g. 1440x1080)', 'error'); return; }
-
       logConsole.innerHTML = '';
       addLog(`Applying ${resolution} to saved account...`, 'info');
       setRunning(true);
@@ -527,68 +622,64 @@
       }
     }
 
+    // ── Settings actions ──────────────────────────────────────────────────────
+    document.getElementById('btn-github').addEventListener('click',
+      () => window.pywebview.api.open_url(GITHUB_PAGE));
+
+    document.getElementById('btn-open-backups').addEventListener('click',
+      () => window.pywebview.api.open_backup_folder());
+
+    document.getElementById('btn-clear-accounts').addEventListener('click', async () => {
+      await window.pywebview.api.clear_accounts();
+      await refreshAccounts();
+      addLog('Saved accounts cleared.', 'muted');
+    });
+
+    document.getElementById('btn-latest-release').addEventListener('click',
+      () => window.pywebview.api.open_url(RELEASES_PAGE));
+
     // ── Window controls ───────────────────────────────────────────────────────
     document.getElementById('btn-minimize').addEventListener('click', () => window.pywebview.api.minimize());
     document.getElementById('btn-close').addEventListener('click',    () => window.pywebview.api.close());
 
     // ── Update banner ─────────────────────────────────────────────────────────
-    const RELEASES_PAGE = "https://github.com/ahhmilo/EasyTS/releases/latest";
-    const RELEASES_API  = "https://api.github.com/repos/ahhmilo/EasyTS/releases/latest";
-
     function showUpdateBanner(latestVersion, currentVersion, isOld) {
-      const label = document.getElementById('update-version');
-      const curr  = document.getElementById('current-version-label');
-      const banner = document.getElementById('update-banner');
-
       if (isOld) {
-        label.textContent = latestVersion;
-        curr.textContent  = "outdated version";
-        // Swap banner text for old-version case
         document.getElementById('update-banner-left').innerHTML =
           '⚠ You are using an <span>outdated version</span> of EasyTS. We strongly recommend updating to <span>' + latestVersion + '</span>.';
       } else {
-        label.textContent = latestVersion;
-        curr.textContent  = currentVersion;
+        document.getElementById('update-version').textContent = latestVersion;
+        document.getElementById('current-version-label').textContent = currentVersion;
       }
-
-      banner.classList.add('visible');
+      document.getElementById('update-banner').classList.add('visible');
       document.getElementById('btn-update-download').onclick = () => window.pywebview.api.open_url(RELEASES_PAGE);
-      document.getElementById('btn-update-dismiss').onclick  = () => banner.classList.remove('visible');
+      document.getElementById('btn-update-dismiss').onclick  = () => document.getElementById('update-banner').classList.remove('visible');
     }
 
     async function checkVersion() {
       try {
-        // Fetch latest release from GitHub
         const resp   = await fetch(RELEASES_API, { headers: { "User-Agent": "EasyTS" } });
         const data   = await resp.json();
         const latest = data.tag_name;
         if (!latest) return;
 
-        // Try to get version from the exe — old exes won't have this method
         let current = null;
-        try {
-          current = await window.pywebview.api.get_version();
-        } catch(e) {
-          current = null;
-        }
+        try { current = await window.pywebview.api.get_version(); } catch(e) {}
 
-        if (!current) {
-          // Old exe — no get_version() method
-          showUpdateBanner(latest, null, true);
-        } else if (current !== latest) {
-          // New exe but outdated version
-          showUpdateBanner(latest, current, false);
-        }
-        // If current === latest, do nothing
-      } catch(e) {
-        // No internet or API failed — silently ignore
-      }
+        if (!current)              showUpdateBanner(latest, null, true);
+        else if (current !== latest) showUpdateBanner(latest, current, false);
+      } catch(e) {}
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
-    window.addEventListener('pywebviewready', () => {
+    window.addEventListener('pywebviewready', async () => {
       refreshAccounts();
+      refreshPresets();
       checkVersion();
+      try {
+        const v = await window.pywebview.api.get_version();
+        document.getElementById('settings-version-label').textContent = v;
+      } catch(e) {}
     });
   </script>
 

@@ -9,6 +9,8 @@
 
 Click to expand.
 
+---
+
 # EasyTS
 A lightweight Windows utility that instantly applies True-Stretch resolutions to VALORANT accounts without requiring manual configuration edits.
 

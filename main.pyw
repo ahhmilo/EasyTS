@@ -16,9 +16,10 @@ import tempfile
 import textwrap
 import webbrowser
 import tkinter as tk
+import threading
 from typing import Optional, Tuple
 
-CURRENT_VERSION = "v2.4.0"
+CURRENT_VERSION = "v2.5.0"
 GITHUB_URL      = "https://github.com/ahhmilo/EasyTS"
 
 WEBVIEW2_DOWNLOAD_URL = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
@@ -539,6 +540,122 @@ class Api:
 
         except Exception as e:
             log_to_ui(self._window, f"Error: {e}", "error")
+            return {"success": False}
+
+
+    def check_black_bars_needed(self) -> bool:
+        """Returns True if any Scaling registry key exists and is not already 3."""
+        try:
+            base_key = winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"SYSTEM\ControlSet001\Control\GraphicsDrivers\Configuration"
+            )
+            found_any = False
+            needs_fix = False
+            i = 0
+            while True:
+                try:
+                    config_name = winreg.EnumKey(base_key, i)
+                    try:
+                        sub_key = winreg.OpenKey(base_key, config_name + r"\00\00")
+                        try:
+                            val, _ = winreg.QueryValueEx(sub_key, "Scaling")
+                            found_any = True
+                            if val != 3:
+                                needs_fix = True
+                        except FileNotFoundError:
+                            pass
+                        winreg.CloseKey(sub_key)
+                    except OSError:
+                        pass
+                    i += 1
+                except OSError:
+                    break
+            winreg.CloseKey(base_key)
+            return found_any and needs_fix
+        except Exception:
+            return False
+
+    def fix_black_bars(self) -> dict:
+        ps_script = r"""
+$regBase = "HKLM:\SYSTEM\ControlSet001\Control\GraphicsDrivers\Configuration"
+$changed = 0
+$failed  = 0
+
+Write-Host ""
+Write-Host "  EasyTS - Fix Black Bars" -ForegroundColor Red
+Write-Host "  ========================" -ForegroundColor DarkGray
+Write-Host ""
+Write-Host "  Setting display scaling to Full Panel for all configurations..." -ForegroundColor Gray
+Write-Host ""
+
+try {
+    $configs = Get-ChildItem -Path $regBase -ErrorAction Stop
+} catch {
+    Write-Host "  ERROR: Could not open registry path." -ForegroundColor Red
+    Write-Host "  $($_.Exception.Message)"
+    Write-Host ""
+    Read-Host "  Press ENTER to exit"
+    exit 1
+}
+
+foreach ($config in $configs) {
+    $sub00 = Join-Path $config.PSPath "00"
+    if (-not (Test-Path $sub00)) { continue }
+    $sub0000 = Join-Path $sub00 "00"
+    if (-not (Test-Path $sub0000)) { continue }
+
+    $scalingPath = $sub0000
+    $val = Get-ItemProperty -Path $scalingPath -Name "Scaling" -ErrorAction SilentlyContinue
+    if ($null -eq $val) { continue }
+
+    try {
+        Set-ItemProperty -Path $scalingPath -Name "Scaling" -Value 3 -Type DWord -ErrorAction Stop
+        Write-Host "  [OK] $($config.PSChildName)" -ForegroundColor Green
+        $changed++
+    } catch {
+        Write-Host "  [FAIL] $($config.PSChildName): $($_.Exception.Message)" -ForegroundColor Red
+        $failed++
+    }
+}
+
+Write-Host ""
+if ($changed -eq 0 -and $failed -eq 0) {
+    Write-Host "  No Scaling registry keys found on this system." -ForegroundColor Yellow
+    Write-Host "  This fix may not apply to your GPU or driver." -ForegroundColor Yellow
+} else {
+    Write-Host "  Done. $changed key(s) updated, $failed failed." -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Please RESTART your PC for changes to take effect." -ForegroundColor Yellow
+}
+
+Write-Host ""
+Read-Host "  Press ENTER to close"
+"""
+        try:
+            ps_file = tempfile.mktemp(suffix=".ps1", prefix="EasyTS_blackbars_")
+            with open(ps_file, "w", encoding="utf-8") as f:
+                f.write(ps_script)
+
+            ps_cmd = (
+                "Start-Process powershell -ArgumentList "
+                "'-ExecutionPolicy Bypass -File \"" + ps_file + "\"' "
+                "-Verb RunAs -Wait"
+            )
+
+            def _launch():
+                result = subprocess.run(["powershell.exe", "-Command", ps_cmd])
+                if result.returncode != 0:
+                    log_to_ui(self._window,
+                              "UAC prompt was denied. Administrator permissions are required to apply this fix.",
+                              "error")
+
+            threading.Thread(target=_launch, daemon=True).start()
+            log_to_ui(self._window,
+                      "Black bars fix launched — accept the UAC prompt to continue.", "info")
+            return {"success": True}
+        except Exception as e:
+            log_to_ui(self._window, f"Error launching fix: {e}", "error")
             return {"success": False}
 
     def restore_account(self, folder: str) -> dict:

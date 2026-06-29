@@ -11,7 +11,7 @@ Click to expand.
 
 ---
 
-# EasyTS
+# EasyTS — VALORANT True Stretch Resolution Tool
 A lightweight Windows utility that instantly applies True-Stretched resolutions to VALORANT accounts without requiring manual configuration edits.
 
 EasyTS automatically handles resolution changes, fullscreen/windowed settings, stretch behavior, account management, presets, and backups through a simple graphical interface.

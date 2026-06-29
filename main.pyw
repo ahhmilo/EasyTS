@@ -1,4 +1,12 @@
+# EasyTS
 # Copyright (c) 2026 ahhmilo. All rights reserved.
+#
+# This software is proprietary. The source code is publicly viewable for
+# transparency, but copying, modification, redistribution, reuploading,
+# repackaging, or publishing modified versions is not allowed without
+# explicit permission from the author.
+#
+# See LICENSE.md for full license terms.
 
 import webview
 import os

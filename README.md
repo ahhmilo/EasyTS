@@ -3,13 +3,9 @@
 [![HTML](https://img.shields.io/badge/language-HTML-E34F26?logo=html5&logoColor=white&labelColor=555555)](#)
 [![License](https://img.shields.io/badge/license-Proprietary-red)](#)
 
-| Main page | Settings page |
-|---|---|
-| ![](https://files.catbox.moe/plle0l.png) | ![](https://files.catbox.moe/nbugml.png) |
-
-Click to expand.
-
----
+<p align="center">
+  <img src="assets/EasyTS_logo.png" width="160" alt="EasyTS logo">
+</p>
 
 # EasyTS - VALORANT True Stretch Tool
 
@@ -19,11 +15,19 @@ EasyTS automatically finds the correct Riot account config and applies custom st
 
 ---
 
+## Preview
+
+| Main page | Settings page |
+|---|---|
+| ![](assets/main_page.png) | ![](assets/settings_page.png) |
+
+---
+
 ## True Stretch in action
 
 | Without True Stretch | With True Stretch |
 |---|---|
-| ![](https://files.catbox.moe/3wxgnu.png) | ![](https://files.catbox.moe/cr3qnr.png) |
+| ![](assets/without_true_stretch.png) | ![](assets/with_true_stretch.png) |
 
 Both screenshots use the same resolution (`1440x1080`). EasyTS applies the stretched/fill behavior automatically.
 

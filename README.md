@@ -11,186 +11,257 @@ Click to expand.
 
 ---
 
-# EasyTS
-A lightweight Windows utility that instantly applies True-Stretched resolutions to VALORANT accounts without requiring manual configuration edits.
+# EasyTS - VALORANT True Stretch Tool
 
-EasyTS automatically handles resolution changes, fullscreen/windowed settings, stretch behavior, account management, presets, and backups through a simple graphical interface.
+A lightweight Windows utility for applying VALORANT True Stretch resolutions without manually editing config files.
+
+EasyTS helps you apply stretched resolutions like `1440x1080`, `1280x1024`, and `1600x1080` by automatically editing the required `GameUserSettings.ini` values for the selected Riot account. It handles resolution changes, fullscreen/windowed settings, stretch/fill behavior, saved accounts, presets, backups, and restore options through a simple graphical interface.
+
+EasyTS is mainly meant for people who want a beginner-friendly True Stretch setup without manually searching through `%localappdata%\VALORANT\Saved\Config\`, finding the correct account folder, editing multiple config values, or disabling monitors in Device Manager.
 
 ---
 
-## True-Stretched in action
+## True Stretch in action
 
-| Without True-Stretched | With True-Stretched |
+| Without True Stretch | With True Stretch |
 |---|---|
 | ![](https://files.catbox.moe/3wxgnu.png) | ![](https://files.catbox.moe/cr3qnr.png) |
 
-Both screenshots use the same resolution (1440x1080).
-EasyTS applies the stretched/fill behavior automatically.
+Both screenshots use the same resolution (`1440x1080`). EasyTS applies the stretched/fill behavior automatically.
 
 ---
 
 ## Features
-- Instant True-Stretched applying
+
+- Instant VALORANT True Stretch setup
+- Custom stretched resolutions such as `1440x1080`, `1280x1024`, `1600x1080`, and more
 - Multi-account support with saved account switcher
 - Resolution presets for quick re-applying
 - Automatic config backup system with one-click restore
-- VALORANT running detection — warns you before writing to a locked file
-- Automatic read-only handling
+- VALORANT running detection before applying changes
+- Automatic read-only config handling
 - Automatic WebView2 check with guided install if missing
 - Automatic update checker on startup
 - Lightweight standalone executable
-- Black bars fix for laptop users via registry scaling
+- Black bars fix for some laptop users through registry scaling
+- Simple graphical interface, no terminal required
 
 ---
 
 ## Download
+
 [Latest release](https://github.com/ahhmilo/EasyTS/releases/latest)
 
 ---
 
 ## Installation
-1. Download the latest `.exe`
-2. Move it somewhere accessible (`Desktop`, `Downloads`, etc.)
-3. Run it directly — no installer required
+
+1. Download the latest `.exe` from the official GitHub releases page.
+2. Move it somewhere accessible, such as `Desktop` or `Downloads`.
+3. Run it directly.
+
+No installer is required.
 
 ---
 
 ## Requirements
+
 - Windows 10 or Windows 11
 - Riot Client installed and logged in
-- VALORANT installed and **closed** while using EasyTS
-- Microsoft WebView2 Runtime — pre-installed on Windows 11, may need manual install on Windows 10. EasyTS will prompt you automatically if it is missing.
+- VALORANT installed
+- VALORANT completely closed while using EasyTS
+- Microsoft WebView2 Runtime
+
+WebView2 is usually pre-installed on Windows 11. Some Windows 10 or stripped-down Windows installs may need it installed manually. EasyTS will prompt you automatically if WebView2 is missing.
 
 ---
 
 ## How to use EasyTS
 
-### Applying True-Stretched to a new account
+### Applying True Stretch to a new account
+
 1. Close VALORANT completely.
-2. Open EasyTS.
-3. Make sure Riot Client is open and logged into the desired account.
-4. Enter a resolution using the format `WIDTHxHEIGHT` — e.g. `1440x1080`
-5. Optionally save it as a preset for quick re-use later.
+2. Make sure Riot Client is open and logged into the account you want to use.
+3. Open EasyTS.
+4. Enter a resolution using the format `WIDTHxHEIGHT`, for example `1440x1080`.
+5. Optionally save the resolution as a preset.
 6. Click **Start — Auto-detect Account**.
-7. Wait for the success confirmation in the log output.
+7. Wait for the success message in the log output.
+8. Launch VALORANT.
 
 ### Using saved accounts
+
 After a successful apply, EasyTS saves the account automatically.
 
 Saved accounts appear in the account switcher where you can:
-- Re-apply True-Stretched with the current resolution in one click
+
+- Re-apply True Stretch with the current resolution in one click
 - Restore the latest backup
 - View the last applied timestamp and backup date
 
 ### Presets
+
 Type a resolution and click **+ Save current** to save it as a preset chip.
+
 Click a preset chip to instantly fill the resolution input.
 
 ---
 
 ## What EasyTS changes automatically
+
 | Setting | Value |
 |---|---|
 | `ResolutionSizeX / Y` | Custom resolution |
 | `LastConfirmedResolutionSizeX / Y` | Custom resolution |
 | `LastUserConfirmedResolutionSizeX / Y` | Custom resolution |
-| `FullscreenMode` | `2` (Windowed) |
+| `FullscreenMode` | `2` |
 | `LastConfirmedFullscreenMode` | `2` |
 | `PreferredFullscreenMode` | `2` |
 | `bShouldLetterbox` | `False` |
 | `bLastConfirmedShouldLetterbox` | `False` |
 
-If `GameUserSettings.ini` is marked as read-only, EasyTS removes the attribute automatically before applying changes.
+If `GameUserSettings.ini` is marked as read-only, EasyTS removes the read-only attribute automatically before applying changes.
 
 ---
 
-## Backup System
-EasyTS automatically creates a backup before modifying any configuration file.
+## Backup system
+
+EasyTS automatically creates a backup before modifying any VALORANT configuration file.
 
 Backups are stored in:
-```
+
+```text
 %localappdata%\EasyTS\Backups\
 ```
 
-Each account keeps:
-- The latest backup only
+Each saved account keeps:
+
+- The latest backup
 - The backup creation timestamp
 - One-click restore support directly inside the UI
 
 ---
 
-## FAQ
+## Safety and transparency
 
-### Is EasyTS safe?
-- EasyTS only reads and writes VALORANT's local configuration files.
-- The application does not communicate with Riot servers.
-- No game files are modified.
+EasyTS only reads and writes VALORANT's local configuration files.
+
+EasyTS does not:
+
+- Inject into VALORANT
+- Modify game files
+- Interact with Riot servers
+- Run during gameplay
+- Bypass Vanguard
+- Change account data
 
 Because EasyTS is unsigned independent software, Windows Defender or SmartScreen may show a warning. This is common for unsigned applications.
 
 If SmartScreen appears:
-```
+
+```text
 More info -> Run anyway
 ```
 
 If you are uncomfortable running the tool, do not use it.
 
+The source code is publicly viewable on GitHub for transparency.
+
 ---
 
+## FAQ
+
 ### Why does EasyTS require Riot Client?
+
 VALORANT stores configuration files separately for every Riot account. EasyTS uses Riot Client to detect the currently active account automatically.
 
 ---
 
 ### Can I get banned?
-EasyTS only edits local configuration values and does not inject into the game or interact with Riot services during gameplay.
+
+EasyTS only edits local configuration values and does not inject into the game, modify game files, or interact with Riot services during gameplay.
 
 Use at your own discretion.
 
 ---
 
-### Why is True-Stretch not working?
-Check the following:
-- Sometimes the fill mode might glitch — before running EasyTS, set your game to **Fullscreen** mode with **Fill** checked.
-- Your monitor supports custom resolutions.
-- GPU scaling is enabled in NVIDIA Control Panel or AMD Software if necessary.
+### Why should VALORANT be closed?
 
-EasyTS attempts to configure these settings automatically, but some systems may override them on launch.
+VALORANT should be completely closed while EasyTS applies changes. This prevents the game from overwriting the config file or keeping settings locked while the tool is trying to edit them.
+
+EasyTS checks if VALORANT is running and warns you before applying changes.
 
 ---
 
-### Popular resolutions
+### Why is True Stretch not working?
+
+Check the following:
+
+- VALORANT was closed before applying changes
+- Your custom resolution exists and is supported by your monitor/GPU
+- Your GPU scaling settings allow stretching
+- Your in-game display mode/fill behavior is not overriding the config
+- If needed, set VALORANT to **Fullscreen** with **Fill** checked, close the game, then run EasyTS again
+
+EasyTS attempts to configure the required settings automatically, but some systems may override them on launch.
+
+---
+
+### Black bars still appear. What should I do?
+
+Some laptops and display setups may still show black bars because of GPU or display scaling behavior.
+
+EasyTS includes a black bars fix option for some laptop users through registry scaling. This may not work on every system.
+
+You may also need to check your NVIDIA Control Panel, AMD Software, Intel Graphics Command Center, or monitor scaling settings.
+
+---
+
+### Popular True Stretch resolutions
 
 | Resolution |
 |---|
-| 1440x1080 |
-| 1280x1024 |
-| 1600x1080 |
-| 1154x1080 |
-| 1080x1080 |
+| `1440x1080` |
+| `1280x1024` |
+| `1600x1080` |
+| `1154x1080` |
+| `1080x1080` |
 
 ---
 
 ### How do I uninstall EasyTS?
+
 Delete the executable.
 
 To completely undo changes:
-1. Use the built-in **Restore** button in the saved accounts section
-2. Or manually reset VALORANT video settings in-game
-3. Or delete `GameUserSettings.ini`
 
-Config location:
-```
+1. Use the built-in **Restore** button in the saved accounts section.
+2. Or manually reset VALORANT video settings in-game.
+3. Or delete `GameUserSettings.ini`.
+
+VALORANT config location:
+
+```text
 %localappdata%\VALORANT\Saved\Config\
 ```
 
-Deleting the config file will also reset graphics settings.
+Deleting `GameUserSettings.ini` will reset VALORANT graphics settings.
+
+EasyTS local data is stored in:
+
+```text
+%localappdata%\EasyTS\
+```
+
+You can delete that folder if you also want to remove EasyTS presets, saved accounts, and backups.
 
 ---
 
 ### My question is not listed here
+
 Open an issue on GitHub or contact me on Discord:
-```
+
+```text
 vestryman
 ```
 

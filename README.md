@@ -7,7 +7,7 @@
   <img src="assets/EasyTS_logo.png" width="160" alt="EasyTS logo">
 </p>
 
-# EasyTS - VALORANT True Stretch Tool
+# EasyTS
 
 A lightweight Windows utility for applying VALORANT True Stretch resolutions without manually editing `GameUserSettings.ini`.
 

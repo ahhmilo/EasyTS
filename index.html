@@ -662,6 +662,21 @@
     const RELEASES_API  = "https://api.github.com/repos/ahhmilo/EasyTS/releases/latest";
     const GITHUB_PAGE   = "https://github.com/ahhmilo/EasyTS";
 
+    // ── Compatibility helper ──────────────────────────────────────────────────
+    // Wraps any API call. If the method doesn't exist on the old exe, returns
+    // null and optionally logs a message instead of crashing.
+    async function api(fn, fallbackMsg) {
+      try {
+        return await fn();
+      } catch(e) {
+        if (fallbackMsg) addLog(fallbackMsg, 'error');
+        return null;
+      }
+    }
+
+    // Detected exe version — set on init. null means old exe with no get_version().
+    let exeVersion = null;
+
     // ── Page switching ────────────────────────────────────────────────────────
     const settingsBtn = document.getElementById('btn-settings');
     let settingsOpen  = false;
@@ -694,10 +709,19 @@
 
     // ── Presets ───────────────────────────────────────────────────────────────
     async function refreshPresets() {
-      const presets = await window.pywebview.api.get_presets();
-      const list    = document.getElementById('presets-list');
-      list.innerHTML = '';
+      const presets = await api(
+        () => window.pywebview.api.get_presets()
+      );
+      const list = document.getElementById('presets-list');
+      const wrap = document.getElementById('presets-wrap');
 
+      if (presets === null) {
+        // Function not available on this exe — hide presets section entirely
+        wrap.style.display = 'none';
+        return;
+      }
+
+      list.innerHTML = '';
       if (!presets || presets.length === 0) {
         list.innerHTML = '<span id="presets-empty">No presets saved yet.</span>';
         return;
@@ -714,7 +738,7 @@
           resInput.value = p.resolution;
         });
         chip.querySelector('.preset-chip-del').addEventListener('click', async () => {
-          await window.pywebview.api.delete_preset(p.name);
+          await api(() => window.pywebview.api.delete_preset(p.name));
           refreshPresets();
         });
         list.appendChild(chip);
@@ -725,18 +749,23 @@
       const resolution = resInput.value.trim();
       if (!resolution) { addLog('Enter a resolution first to save as preset.', 'error'); return; }
       if (!/^\d{3,4}x\d{3,4}$/i.test(resolution)) { addLog('Invalid format. Use WIDTHxHEIGHT', 'error'); return; }
-      const name = resolution;
-      await window.pywebview.api.save_preset(name, resolution);
+      await api(
+        () => window.pywebview.api.save_preset(resolution, resolution),
+        'Presets require a newer version of EasyTS. Please update.'
+      );
       refreshPresets();
     });
 
     // ── Accounts ──────────────────────────────────────────────────────────────
     async function refreshAccounts() {
-      const accounts = await window.pywebview.api.get_accounts();
+      const accounts = await api(
+        () => window.pywebview.api.get_accounts(),
+        'Could not load accounts. Please update EasyTS.'
+      );
       const list = document.getElementById('accounts-list');
       list.innerHTML = '';
 
-      if (!accounts || accounts.length === 0) {
+      if (accounts === null || !accounts || accounts.length === 0) {
         list.innerHTML = '<div id="accounts-empty">No saved accounts yet. Run Start to add one.</div>';
         return;
       }
@@ -772,13 +801,11 @@
       logConsole.innerHTML = '';
       addLog(`Starting with resolution ${resolution}...`, 'info');
       setRunning(true);
-      try {
-        await window.pywebview.api.apply_stretched(resolution);
-      } catch(err) {
-        addLog(`Exception: ${err.message || err}`, 'error');
-      } finally {
-        setRunning(false);
-      }
+      await api(
+        () => window.pywebview.api.apply_stretched(resolution),
+        'apply_stretched failed. Please update EasyTS.'
+      );
+      setRunning(false);
     });
 
     // ── Apply to saved ────────────────────────────────────────────────────────
@@ -789,13 +816,11 @@
       logConsole.innerHTML = '';
       addLog(`Applying ${resolution} to saved account...`, 'info');
       setRunning(true);
-      try {
-        await window.pywebview.api.apply_to_saved(folder, resolution);
-      } catch(err) {
-        addLog(`Exception: ${err.message || err}`, 'error');
-      } finally {
-        setRunning(false);
-      }
+      await api(
+        () => window.pywebview.api.apply_to_saved(folder, resolution),
+        'This feature requires a newer version of EasyTS. Please update.'
+      );
+      setRunning(false);
     }
 
     // ── Restore ───────────────────────────────────────────────────────────────
@@ -803,30 +828,39 @@
       logConsole.innerHTML = '';
       addLog('Restoring backup...', 'info');
       setRunning(true);
-      try {
-        await window.pywebview.api.restore_account(folder);
-      } catch(err) {
-        addLog(`Exception: ${err.message || err}`, 'error');
-      } finally {
-        setRunning(false);
-      }
+      await api(
+        () => window.pywebview.api.restore_account(folder),
+        'This feature requires a newer version of EasyTS. Please update.'
+      );
+      setRunning(false);
     }
 
     // ── Settings actions ──────────────────────────────────────────────────────
-    document.getElementById('btn-github').addEventListener('click',
-      () => window.pywebview.api.open_url(GITHUB_PAGE));
+    document.getElementById('btn-github').addEventListener('click', () =>
+      api(() => window.pywebview.api.open_url(GITHUB_PAGE))
+    );
 
-    document.getElementById('btn-open-backups').addEventListener('click',
-      () => window.pywebview.api.open_backup_folder());
+    document.getElementById('btn-open-backups').addEventListener('click', () =>
+      api(
+        () => window.pywebview.api.open_backup_folder(),
+        'This feature requires a newer version of EasyTS. Please update.'
+      )
+    );
 
     document.getElementById('btn-clear-accounts').addEventListener('click', async () => {
-      await window.pywebview.api.clear_accounts();
-      await refreshAccounts();
-      addLog('Saved accounts cleared.', 'muted');
+      const result = await api(
+        () => window.pywebview.api.clear_accounts(),
+        'This feature requires a newer version of EasyTS. Please update.'
+      );
+      if (result !== null) {
+        await refreshAccounts();
+        addLog('Saved accounts cleared.', 'muted');
+      }
     });
 
-    document.getElementById('btn-latest-release').addEventListener('click',
-      () => window.pywebview.api.open_url(RELEASES_PAGE));
+    document.getElementById('btn-latest-release').addEventListener('click', () =>
+      api(() => window.pywebview.api.open_url(RELEASES_PAGE))
+    );
 
     // ── Black bars fix ────────────────────────────────────────────────────────
     let bbCollapsed = false;
@@ -837,24 +871,19 @@
     }
 
     async function initBlackBarsSection() {
-      try {
-        const needed = await window.pywebview.api.check_black_bars_needed();
-        if (needed) {
-          document.getElementById('blackbars-card').style.display = 'block';
-        }
-      } catch(e) {
-        // old exe or error — hide section
+      const needed = await api(() => window.pywebview.api.check_black_bars_needed());
+      if (needed) {
+        document.getElementById('blackbars-card').style.display = 'block';
       }
+      // if null (old exe) or false — stays hidden
     }
 
-    // ── Black bars fix ────────────────────────────────────────────────────────
     document.getElementById('btn-fix-blackbars').addEventListener('click', async () => {
       addLog('Launching black bars fix — accept the UAC prompt to continue...', 'info');
-      try {
-        await window.pywebview.api.fix_black_bars();
-      } catch(err) {
-        addLog(`Exception: ${err.message || err}`, 'error');
-      }
+      await api(
+        () => window.pywebview.api.fix_black_bars(),
+        'This feature requires a newer version of EasyTS. Please update.'
+      );
     });
 
     // ── Window controls ───────────────────────────────────────────────────────
@@ -871,8 +900,10 @@
         document.getElementById('current-version-label').textContent = currentVersion;
       }
       document.getElementById('update-banner').classList.add('visible');
-      document.getElementById('btn-update-download').onclick = () => window.pywebview.api.open_url(RELEASES_PAGE);
-      document.getElementById('btn-update-dismiss').onclick  = () => document.getElementById('update-banner').classList.remove('visible');
+      document.getElementById('btn-update-download').onclick = () =>
+        api(() => window.pywebview.api.open_url(RELEASES_PAGE));
+      document.getElementById('btn-update-dismiss').onclick  = () =>
+        document.getElementById('update-banner').classList.remove('visible');
     }
 
     async function checkVersion() {
@@ -885,21 +916,21 @@
         let current = null;
         try { current = await window.pywebview.api.get_version(); } catch(e) {}
 
-        if (!current)              showUpdateBanner(latest, null, true);
+        if (!current)                showUpdateBanner(latest, null, true);
         else if (current !== latest) showUpdateBanner(latest, current, false);
       } catch(e) {}
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
     window.addEventListener('pywebviewready', async () => {
+      exeVersion = await api(() => window.pywebview.api.get_version());
+      if (exeVersion) {
+        document.getElementById('settings-version-label').textContent = exeVersion;
+      }
       refreshAccounts();
       refreshPresets();
       checkVersion();
       initBlackBarsSection();
-      try {
-        const v = await window.pywebview.api.get_version();
-        document.getElementById('settings-version-label').textContent = v;
-      } catch(e) {}
     });
   </script>
 

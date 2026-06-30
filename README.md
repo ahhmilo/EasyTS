@@ -19,7 +19,7 @@ Supports custom resolutions, saved accounts, presets, automatic backups, and one
 
 | Main page | Settings page |
 |---|---|
-| ![](assets/main_page.png) | ![](assets/settings_page.png) |
+| ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/main_page.png) | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/settings_page.png) |
 
 ---
 
@@ -27,7 +27,7 @@ Supports custom resolutions, saved accounts, presets, automatic backups, and one
 
 | Without True Stretch | With True Stretch |
 |---|---|
-| ![](assets/without_true_stretch.png) | ![](assets/with_true_stretch.png) |
+| ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/without_true_stretch.png) | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/with_true_stretch.png) |
 
 Both screenshots use the same resolution (`1440x1080`). EasyTS applies the stretched/fill behavior automatically.
 

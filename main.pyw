@@ -14,6 +14,7 @@ import json
 import stat
 import base64
 import urllib.request
+import urllib.error
 import ssl
 import re
 import time
@@ -27,7 +28,7 @@ import tkinter as tk
 import threading
 from typing import Optional, Tuple
 
-CURRENT_VERSION = "v2.5.0"
+CURRENT_VERSION = "v3.0.0"
 GITHUB_URL      = "https://github.com/ahhmilo/EasyTS"
 
 WEBVIEW2_DOWNLOAD_URL = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
@@ -162,7 +163,13 @@ def riot_request(port: int, auth_token: str, endpoint: str):
     ssl_ctx = ssl.create_default_context()
     ssl_ctx.check_hostname = False
     ssl_ctx.verify_mode = ssl.CERT_NONE
-    return urllib.request.urlopen(req, context=ssl_ctx)
+    try:
+        return urllib.request.urlopen(req, context=ssl_ctx, timeout=5)
+    except (urllib.error.URLError, ConnectionRefusedError, TimeoutError, OSError):
+        raise ValorantConfigError(
+            "Riot Client is not open or not responding. Please open Riot Client, "
+            "log into the account you want to use, keep VALORANT closed, and try again."
+        )
 
 def get_riot_account_info(port: int, auth_token: str) -> Tuple[str, str, str]:
     response  = riot_request(port, auth_token, "/rso-auth/v1/authorization/userinfo")
@@ -230,6 +237,143 @@ def modify_game_user_settings(config_file: str, width: int, height: int) -> None
             final.append("LastConfirmedFullscreenMode=2\n")
         elif line.startswith("PreferredFullscreenMode="):
             final.append("PreferredFullscreenMode=2\n")
+        elif line.startswith("bShouldLetterbox="):
+            final.append("bShouldLetterbox=False\n")
+        elif line.startswith("bLastConfirmedShouldLetterbox="):
+            final.append("bLastConfirmedShouldLetterbox=False\n")
+        else:
+            final.append(line)
+
+    with open(config_file, "w", encoding="utf-8") as f:
+        f.writelines(final)
+
+
+
+def get_fullscreen_state_path() -> str:
+    return os.path.join(get_easysts_dir(), "fullscreen_state.json")
+
+def load_fullscreen_state() -> Optional[dict]:
+    path = get_fullscreen_state_path()
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+def save_fullscreen_state(state: dict) -> None:
+    with open(get_fullscreen_state_path(), "w", encoding="utf-8") as f:
+        json.dump(state, f, indent=2, ensure_ascii=False)
+
+def clear_fullscreen_state() -> None:
+    path = get_fullscreen_state_path()
+    if os.path.isfile(path):
+        os.remove(path)
+
+def list_monitor_devices() -> list:
+    try:
+        ps_script = (
+            "Get-PnpDevice -Class Monitor | "
+            "Select-Object InstanceId, FriendlyName, Status | "
+            "ConvertTo-Json -Compress"
+        )
+        result = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-Command", ps_script],
+            capture_output=True, text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW
+        )
+        raw = result.stdout.strip()
+        if not raw:
+            return []
+        data = json.loads(raw)
+        if isinstance(data, dict):
+            data = [data]
+        monitors = []
+        for d in data:
+            inst_id = d.get("InstanceId")
+            if not inst_id:
+                continue
+            monitors.append({
+                "instance_id": inst_id,
+                "description": d.get("FriendlyName") or "Unknown Monitor",
+                "status": d.get("Status") or "",
+            })
+        return monitors
+    except Exception:
+        return []
+
+def run_elevated_pnp_action(instance_ids: list, enable: bool) -> None:
+    cmdlet = "Enable-PnpDevice" if enable else "Disable-PnpDevice"
+    lines = []
+    for inst_id in instance_ids:
+        escaped = inst_id.replace("'", "''")
+        lines.append(f"{cmdlet} -InstanceId '{escaped}' -Confirm:$false -ErrorAction SilentlyContinue")
+    script_body = "\n".join(lines)
+
+    ps1 = tempfile.mktemp(suffix=".ps1", prefix="EasyTS_monitors_")
+    with open(ps1, "w", encoding="utf-8") as f:
+        f.write(script_body + "\n")
+
+    ps_cmd = (
+        "Start-Process powershell -ArgumentList "
+        "'-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"" + ps1 + "\"' "
+        "-Verb RunAs -Wait -WindowStyle Hidden"
+    )
+    subprocess.run(["powershell.exe", "-Command", ps_cmd], creationflags=subprocess.CREATE_NO_WINDOW)
+    try:
+        os.remove(ps1)
+    except Exception:
+        pass
+
+def modify_game_user_settings_fullscreen(config_file: str, width: int, height: int) -> None:
+    file_mode = os.stat(config_file).st_mode
+    if not (file_mode & stat.S_IWRITE):
+        os.chmod(config_file, file_mode | stat.S_IWRITE)
+
+    with open(config_file, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    lines = [l for l in lines if not l.startswith("FullscreenMode=")]
+
+    pass1    = []
+    inserted = False
+    for line in lines:
+        pass1.append(line)
+        if "HDRDisplayOutputNits=" in line:
+            pass1.append("FullscreenMode=0\n")
+            inserted = True
+
+    if not inserted:
+        raise ValorantConfigError(
+            "HDRDisplayOutputNits not found in config. The file may be outdated or corrupted."
+        )
+
+    all_text = "".join(pass1)
+    if "bShouldLetterbox=" not in all_text or "bLastConfirmedShouldLetterbox=" not in all_text:
+        raise ValorantConfigError(
+            "bShouldLetterbox / bLastConfirmedShouldLetterbox not found in config. "
+            "The file may be outdated or corrupted."
+        )
+
+    final = []
+    for line in pass1:
+        if line.startswith("ResolutionSizeX="):
+            final.append(f"ResolutionSizeX={width}\n")
+        elif line.startswith("ResolutionSizeY="):
+            final.append(f"ResolutionSizeY={height}\n")
+        elif line.startswith("LastConfirmedResolutionSizeX="):
+            final.append(f"LastConfirmedResolutionSizeX={width}\n")
+        elif line.startswith("LastConfirmedResolutionSizeY="):
+            final.append(f"LastConfirmedResolutionSizeY={height}\n")
+        elif line.startswith("LastUserConfirmedResolutionSizeX="):
+            final.append(f"LastUserConfirmedResolutionSizeX={width}\n")
+        elif line.startswith("LastUserConfirmedResolutionSizeY="):
+            final.append(f"LastUserConfirmedResolutionSizeY={height}\n")
+        elif line.startswith("LastConfirmedFullscreenMode="):
+            final.append("LastConfirmedFullscreenMode=0\n")
+        elif line.startswith("PreferredFullscreenMode="):
+            final.append("PreferredFullscreenMode=0\n")
         elif line.startswith("bShouldLetterbox="):
             final.append("bShouldLetterbox=False\n")
         elif line.startswith("bLastConfirmedShouldLetterbox="):
@@ -552,7 +696,6 @@ class Api:
 
 
     def check_black_bars_needed(self) -> bool:
-        """Returns True if any Scaling registry key exists and is not already 3."""
         try:
             base_key = winreg.OpenKey(
                 winreg.HKEY_LOCAL_MACHINE,
@@ -664,6 +807,167 @@ Read-Host "  Press ENTER to close"
             return {"success": True}
         except Exception as e:
             log_to_ui(self._window, f"Error launching fix: {e}", "error")
+            return {"success": False}
+
+
+    def get_monitors(self) -> list:
+        return list_monitor_devices()
+
+    def get_fullscreen_state(self) -> Optional[dict]:
+        return load_fullscreen_state()
+
+    def apply_fullscreen_mode(self, resolution_str: str, instance_ids: list) -> dict:
+        match = re.match(r"^(\d{3,4})x(\d{3,4})$", resolution_str.strip().lower())
+        if not match:
+            log_to_ui(self._window, "Invalid resolution format.", "error")
+            return {"success": False}
+
+        if not self._check_valorant_not_running():
+            return {"success": False}
+
+        if not instance_ids:
+            log_to_ui(self._window, "No monitors selected.", "error")
+            return {"success": False}
+
+        width  = int(match.group(1))
+        height = int(match.group(2))
+
+        try:
+            log_to_ui(self._window, "Initializing Fullscreen Mode...", "info")
+            saved_config_dir = get_valorant_config_path()
+
+            lockfile_path = None
+            for attempt in range(3):
+                lockfile_path = find_riot_lockfile()
+                if lockfile_path:
+                    break
+                if attempt < 2:
+                    retry = self._window.create_confirmation_dialog(
+                        "Riot Client Not Found",
+                        "Riot Client lockfile not found.\n\n"
+                        "Please open Riot Client as a visible window, then click OK to retry."
+                    )
+                    if not retry:
+                        log_to_ui(self._window, "Cancelled by user.", "muted")
+                        return {"success": False}
+                    time.sleep(2)
+                else:
+                    raise ValorantConfigError(
+                        "Riot Client lockfile not found after 3 attempts. "
+                        "Make sure Riot Client is open and visible."
+                    )
+
+            name, pid, port, password, protocol = read_riot_lockfile(lockfile_path)
+            auth_token = base64.b64encode(f"riot:{password}".encode()).decode()
+            puuid, region_folder, name_tag = get_riot_account_info(port, auth_token)
+            account_folder = f"{puuid}-{region_folder}"
+            log_to_ui(self._window, f"Account: {name_tag} - {account_folder}", "success")
+
+            config_file = os.path.join(
+                saved_config_dir, account_folder, "WindowsClient", "GameUserSettings.ini"
+            )
+            if not os.path.isfile(config_file):
+                raise ValorantConfigError(
+                    f"GameUserSettings.ini not found for {name_tag}. "
+                    "Please launch VALORANT at least once."
+                )
+
+            log_to_ui(self._window, "Backing up config...", "info")
+            backup_config(config_file, account_folder)
+
+            log_to_ui(self._window, f"Applying {width}x{height} + fullscreen...", "info")
+            modify_game_user_settings_fullscreen(config_file, width, height)
+            upsert_account(name_tag, account_folder)
+
+            save_fullscreen_state({
+                "folder": account_folder,
+                "name_tag": name_tag,
+                "instance_ids": instance_ids,
+                "applied_at": time.strftime("%Y-%m-%d %H:%M"),
+            })
+
+            log_to_ui(self._window, "Disabling selected monitor device(s)...", "info")
+            run_elevated_pnp_action(instance_ids, enable=False)
+
+            log_to_ui(self._window,
+                      f"Fullscreen Mode applied for {name_tag}. Confirm to keep or it will revert automatically.",
+                      "success")
+            self._window.evaluate_js("window.refreshAccounts();")
+            return {"success": True}
+
+        except Exception as e:
+            log_to_ui(self._window, f"Error: {e}", "error")
+            return {"success": False}
+
+    def revert_fullscreen_mode(self) -> dict:
+        try:
+            state = load_fullscreen_state()
+            if not state:
+                log_to_ui(self._window, "No active Fullscreen Mode state to revert.", "muted")
+                return {"success": False}
+
+            folder = state.get("folder")
+            instance_ids = state.get("instance_ids", [])
+
+            if instance_ids:
+                log_to_ui(self._window, "Re-enabling monitor device(s)...", "info")
+                run_elevated_pnp_action(instance_ids, enable=True)
+
+            if folder:
+                bak_path = get_backup_path(folder, create_dir=False)
+                if os.path.isfile(bak_path):
+                    config_file = os.path.join(
+                        get_valorant_config_path(), folder, "WindowsClient", "GameUserSettings.ini"
+                    )
+                    if os.path.isfile(config_file):
+                        file_mode = os.stat(config_file).st_mode
+                        if not (file_mode & stat.S_IWRITE):
+                            os.chmod(config_file, file_mode | stat.S_IWRITE)
+                        shutil.copy2(bak_path, config_file)
+
+            clear_fullscreen_state()
+            log_to_ui(self._window, "Fullscreen Mode reverted.", "success")
+            return {"success": True}
+
+        except Exception as e:
+            log_to_ui(self._window, f"Error reverting: {e}", "error")
+            return {"success": False}
+
+    def confirm_fullscreen_mode(self) -> dict:
+        state = load_fullscreen_state() or {}
+        state["confirmed"] = True
+        state["confirmed_at"] = time.strftime("%Y-%m-%d %H:%M")
+        save_fullscreen_state(state)
+        log_to_ui(
+            self._window,
+            "Fullscreen Mode kept. You can now launch VALORANT. Re-enable monitors in Settings when done playing.",
+            "success"
+        )
+        return {"success": True}
+
+    def enable_all_monitors(self) -> dict:
+        try:
+            state = load_fullscreen_state()
+            instance_ids = state.get("instance_ids", []) if state else []
+
+            if not instance_ids:
+                monitors = list_monitor_devices()
+                instance_ids = [
+                    m["instance_id"] for m in monitors
+                    if m.get("status", "").lower() == "disabled"
+                ]
+
+            if not instance_ids:
+                log_to_ui(self._window, "No disabled monitors found.", "muted")
+                return {"success": True}
+
+            run_elevated_pnp_action(instance_ids, enable=True)
+            clear_fullscreen_state()
+            log_to_ui(self._window, "All monitor devices re-enabled.", "success")
+            return {"success": True}
+
+        except Exception as e:
+            log_to_ui(self._window, f"Error: {e}", "error")
             return {"success": False}
 
     def restore_account(self, folder: str) -> dict:

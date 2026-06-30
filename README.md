@@ -11,9 +11,7 @@
 
 A simple Windows tool for applying VALORANT True Stretch resolutions without manually editing config files.
 
-EasyTS focuses on the stable Config Mode method: it applies the required VALORANT config values through a clean UI, supports saved accounts and presets, creates automatic backups, and includes one-click restore.
-
-> **Notice:** Fullscreen Mode was removed in v3.0.2 because the underlying monitor-disabling method no longer works reliably in VALORANT. The **Re-enable Monitors** recovery button remains available in Settings for users who tested earlier fullscreen builds.
+EasyTS focuses on the stable config-based True Stretch method: it applies the required VALORANT config values through a clean UI, supports saved accounts and presets, creates automatic backups, and includes one-click restore.
 
 ---
 
@@ -44,12 +42,11 @@ Both screenshots use the same resolution (`1440x1080`). EasyTS applies the stret
 - Automatic config backup system with one-click restore
 - VALORANT running detection before applying changes
 - Automatic read-only config handling
-- Locks the config as read-only after applying so VALORANT cannot switch Fill back to Letterbox on launch
+- Optional read-only config lock in Settings
 - Automatic WebView2 check with guided install if missing
 - Automatic update checker on startup
 - Lightweight standalone executable
 - Black bars fix for some laptop users through registry scaling
-- Re-enable Monitors recovery button for users who tested older fullscreen builds
 - Simple graphical interface, no terminal required
 
 ---
@@ -96,7 +93,17 @@ WebView2 is usually pre-installed on Windows 11. Some Windows 10 or stripped-dow
 8. Set your Windows display resolution to the same resolution you entered in EasyTS.
 9. Launch VALORANT.
 
-EasyTS applies the config values automatically, but it does not change your Windows display resolution for you. For this method, your Windows display resolution should match the resolution you applied.
+EasyTS applies the config values automatically, but it does not change your Windows display resolution for you. Your Windows display resolution should match the resolution you applied.
+
+### Read-only Config Lock
+
+EasyTS includes an optional **Read-only Config Lock** setting.
+
+When enabled, EasyTS marks `GameUserSettings.ini` as read-only after applying the stretched resolution. This can help stop VALORANT from changing Fill/Letterbox values back on launch.
+
+When disabled, EasyTS removes the read-only attribute while applying and leaves the config writable afterward.
+
+You can toggle this in **Settings → Read-only Config Lock**.
 
 ### Using saved accounts
 
@@ -131,7 +138,7 @@ Click a preset chip to instantly fill the resolution input.
 
 If `GameUserSettings.ini` is marked as read-only, EasyTS removes the read-only attribute automatically before applying changes.
 
-After applying, EasyTS marks `GameUserSettings.ini` as read-only so VALORANT cannot switch Fill back to Letterbox on launch. EasyTS removes this lock automatically before applying a new resolution or restoring a backup.
+After applying, EasyTS either leaves the config writable or locks it as read-only depending on your **Read-only Config Lock** setting.
 
 ---
 
@@ -214,11 +221,11 @@ The custom resolution should also be supported by your GPU/monitor.
 
 ---
 
-### Why was Fullscreen Mode removed?
+### What does Read-only Config Lock do?
 
-Fullscreen Mode was removed in v3.0.2 because the underlying monitor-disabling method no longer works reliably in VALORANT.
+When enabled, EasyTS marks `GameUserSettings.ini` as read-only after applying your stretched resolution. This can help stop VALORANT from changing Fill/Letterbox settings back on launch.
 
-EasyTS now focuses on the stable Config Mode method. The **Re-enable Monitors** button remains in Settings as a recovery tool for users who tested v3.0.0 or v3.0.1.
+When disabled, EasyTS removes read-only while applying and leaves the config writable afterward.
 
 ---
 
@@ -233,6 +240,7 @@ Check the following:
 - Your GPU scaling settings allow stretching
 - Your in-game display mode/fill behavior is not overriding the config
 - If needed, set VALORANT to **Fullscreen** with **Fill** checked, close the game, then run EasyTS again
+- If VALORANT keeps switching Fill back to Letterbox, try enabling **Read-only Config Lock** in Settings
 
 EasyTS attempts to configure the required settings automatically, but some systems may override them on launch.
 
@@ -245,16 +253,6 @@ Some laptops and display setups may still show black bars because of GPU or disp
 EasyTS includes a black bars fix option for some laptop users through registry scaling. This may not work on every system.
 
 You may also need to check your NVIDIA Control Panel, AMD Software, Intel Graphics Command Center, or monitor scaling settings.
-
----
-
-### My monitor seems stuck disabled. How do I fix it?
-
-This should only apply if you tested EasyTS v3.0.0 or v3.0.1.
-
-Open EasyTS, go to **Settings → Re-enable Monitors**, and click **Re-enable**. This works independently of any other state in the app and is available as a recovery option.
-
-If EasyTS itself will not open, you can also manually re-enable your monitor through Windows Device Manager: right-click the Start button → Device Manager → expand Monitors → right-click the disabled monitor → Enable device.
 
 ---
 
@@ -277,9 +275,8 @@ Delete the executable.
 To completely undo changes:
 
 1. Use the built-in **Restore** button in the saved accounts section.
-2. If you tested Fullscreen Mode in v3.0.0 or v3.0.1, use **Re-enable Monitors** in Settings.
-3. Or manually reset VALORANT video settings in-game.
-4. Or delete `GameUserSettings.ini`.
+2. Or manually reset VALORANT video settings in-game.
+3. Or delete `GameUserSettings.ini`.
 
 VALORANT config location:
 
@@ -295,7 +292,7 @@ EasyTS local data is stored in:
 %localappdata%\EasyTS\
 ```
 
-You can delete that folder if you also want to remove EasyTS presets, saved accounts, and backups.
+You can delete that folder if you also want to remove EasyTS presets, saved accounts, settings, and backups.
 
 ---
 

@@ -9,17 +9,19 @@
 
 # EasyTS
 
-A simple Windows tool for applying VALORANT True Stretch resolutions through a clean UI.
+A simple Windows tool for applying VALORANT True Stretch resolutions without manually editing config files.
 
-Config Mode avoids Device Manager entirely, while Fullscreen Mode offers an advanced lower-latency method using temporary monitor device handling.
+EasyTS focuses on the stable Config Mode method: it applies the required VALORANT config values through a clean UI, supports saved accounts and presets, creates automatic backups, and includes one-click restore.
+
+> **Notice:** Fullscreen Mode was removed in v3.0.2 because the underlying monitor-disabling method no longer works reliably in VALORANT. The **Re-enable Monitors** recovery button remains available in Settings for users who tested earlier fullscreen builds.
 
 ---
 
 ## Preview
 
-| Config Mode | Fullscreen Mode | Settings |
-|---|---|---|
-| ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/main_page.png) | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/fullscreen_mode.png) | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/settings_page.png) |
+| Main page | Settings page |
+|---|---|
+| ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/main_page.png) | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/settings_page.png) |
 
 ---
 
@@ -37,16 +39,17 @@ Both screenshots use the same resolution (`1440x1080`). EasyTS applies the stret
 
 - Instant VALORANT True Stretch setup
 - Custom stretched resolutions such as `1440x1080`, `1280x1024`, `1600x1080`, and more
-- Fullscreen Mode (v3.0.0+) — true fullscreen stretched resolution via temporary monitor disabling, for lower input delay than Windowed mode
 - Multi-account support with saved account switcher
 - Resolution presets for quick re-applying
 - Automatic config backup system with one-click restore
 - VALORANT running detection before applying changes
 - Automatic read-only config handling
+- Locks the config as read-only after applying so VALORANT cannot switch Fill back to Letterbox on launch
 - Automatic WebView2 check with guided install if missing
 - Automatic update checker on startup
 - Lightweight standalone executable
 - Black bars fix for some laptop users through registry scaling
+- Re-enable Monitors recovery button for users who tested older fullscreen builds
 - Simple graphical interface, no terminal required
 
 ---
@@ -81,7 +84,7 @@ WebView2 is usually pre-installed on Windows 11. Some Windows 10 or stripped-dow
 
 ## How to use EasyTS
 
-### Applying True Stretch to a new account (Config Mode)
+### Applying True Stretch
 
 1. Close VALORANT completely.
 2. Make sure Riot Client is open and logged into the account you want to use.
@@ -93,24 +96,7 @@ WebView2 is usually pre-installed on Windows 11. Some Windows 10 or stripped-dow
 8. Set your Windows display resolution to the same resolution you entered in EasyTS.
 9. Launch VALORANT.
 
-Config Mode runs VALORANT in Windowed mode and does not touch Device Manager or monitor devices. It is the safest and most reversible option, but you should manually set your Windows display resolution to match the resolution you applied.
-
-### Fullscreen Mode (advanced, v3.0.0+)
-
-Fullscreen Mode is for users who want true fullscreen stretched resolution with lower input delay than Windowed mode. It works by temporarily disabling your monitor device(s) in Windows so VALORANT cannot detect its native aspect ratio and is forced to use the resolution set in the config file instead.
-
-1. Close VALORANT completely.
-2. Switch to **Fullscreen Mode** at the top of EasyTS.
-3. Enter a resolution and choose which monitor(s) to disable. Disabling all monitors is recommended for the most reliable result.
-4. Click **Apply Fullscreen Mode** and accept the UAC prompt.
-5. Your screen will briefly flicker. This is expected, and you will still be able to see and use your screen normally.
-6. A confirmation prompt appears for 15 seconds. Click **Keep** if everything looks correct, or **Revert**, or let it time out, to undo automatically.
-
-**Important: EasyTS does not watch for VALORANT closing and does not automatically restore your display after you finish playing.** Once you click Keep, your monitor(s) stay disabled until you manually restore them. After you are done playing, go to **Settings → Re-enable Monitors** to restore your normal display state.
-
-The Re-enable Monitors button in Settings always works regardless of EasyTS's current state, so it can also be used as a manual recovery option if anything goes wrong.
-
-Player models may appear visually wider in Fullscreen Mode, similar to other stretched-resolution games. VALORANT's actual hit detection is not affected by this.
+EasyTS applies the config values automatically, but it does not change your Windows display resolution for you. For this method, your Windows display resolution should match the resolution you applied.
 
 ### Using saved accounts
 
@@ -132,8 +118,6 @@ Click a preset chip to instantly fill the resolution input.
 
 ## What EasyTS changes automatically
 
-### Config Mode
-
 | Setting | Value |
 |---|---|
 | `ResolutionSizeX / Y` | Custom resolution |
@@ -145,28 +129,15 @@ Click a preset chip to instantly fill the resolution input.
 | `bShouldLetterbox` | `False` |
 | `bLastConfirmedShouldLetterbox` | `False` |
 
-### Fullscreen Mode
-
-| Setting | Value |
-|---|---|
-| `ResolutionSizeX / Y` | Custom resolution |
-| `LastConfirmedResolutionSizeX / Y` | Custom resolution |
-| `LastUserConfirmedResolutionSizeX / Y` | Custom resolution |
-| `FullscreenMode` | `0` (Fullscreen) |
-| `LastConfirmedFullscreenMode` | `0` |
-| `PreferredFullscreenMode` | `0` |
-| `bShouldLetterbox` | `False` |
-| `bLastConfirmedShouldLetterbox` | `False` |
-
-Selected monitor device(s) are also temporarily disabled in Fullscreen Mode.
-
 If `GameUserSettings.ini` is marked as read-only, EasyTS removes the read-only attribute automatically before applying changes.
+
+After applying, EasyTS marks `GameUserSettings.ini` as read-only so VALORANT cannot switch Fill back to Letterbox on launch. EasyTS removes this lock automatically before applying a new resolution or restoring a backup.
 
 ---
 
 ## Backup system
 
-EasyTS automatically creates a backup before modifying any VALORANT configuration file, in both Config Mode and Fullscreen Mode.
+EasyTS automatically creates a backup before modifying any VALORANT configuration file.
 
 Backups are stored in:
 
@@ -184,7 +155,7 @@ Each saved account keeps:
 
 ## Safety and transparency
 
-EasyTS only reads and writes VALORANT's local configuration files, and in Fullscreen Mode, temporarily disables monitor devices through Windows' built-in device management.
+EasyTS only reads and writes VALORANT's local configuration files.
 
 EasyTS does not:
 
@@ -219,7 +190,7 @@ VALORANT stores configuration files separately for every Riot account. EasyTS us
 
 ### Can I get banned?
 
-EasyTS only edits local configuration values and, in Fullscreen Mode, temporarily disables monitor devices through standard Windows functionality. It does not inject into the game, modify game files, or interact with Riot services during gameplay.
+EasyTS only edits local configuration values. It does not inject into the game, modify game files, or interact with Riot services during gameplay.
 
 Use at your own discretion.
 
@@ -229,19 +200,25 @@ Use at your own discretion.
 
 VALORANT should be completely closed while EasyTS applies changes. This prevents the game from overwriting the config file or keeping settings locked while the tool is trying to edit them.
 
-EasyTS checks if VALORANT is running and warns you before applying changes, in both Config Mode and Fullscreen Mode.
+EasyTS checks if VALORANT is running and warns you before applying changes.
 
 ---
 
 ### Do I need to change my Windows display resolution?
 
-It depends on the mode.
+Yes. Set your Windows display resolution to the same stretched resolution you entered in EasyTS before launching VALORANT.
 
-For **Config Mode**, yes. Set your Windows display resolution to the same stretched resolution you entered in EasyTS before launching VALORANT. For example, if you apply `1440x1080` in EasyTS Config Mode, set Windows to `1440x1080` too.
+For example, if you apply `1440x1080` in EasyTS, set Windows to `1440x1080` too.
 
-For **Fullscreen Mode**, no. Leave Windows at your monitor's native resolution. EasyTS writes the stretched resolution to VALORANT's config and uses temporary monitor device handling so VALORANT can launch with that fullscreen resolution.
+The custom resolution should also be supported by your GPU/monitor.
 
-For both modes, the custom resolution should be supported by your GPU/monitor.
+---
+
+### Why was Fullscreen Mode removed?
+
+Fullscreen Mode was removed in v3.0.2 because the underlying monitor-disabling method no longer works reliably in VALORANT.
+
+EasyTS now focuses on the stable Config Mode method. The **Re-enable Monitors** button remains in Settings as a recovery tool for users who tested v3.0.0 or v3.0.1.
 
 ---
 
@@ -250,12 +227,12 @@ For both modes, the custom resolution should be supported by your GPU/monitor.
 Check the following:
 
 - VALORANT was closed before applying changes
+- Riot Client was open and logged into the correct account
+- Your Windows display resolution matches the resolution you applied in EasyTS
 - Your custom resolution exists and is supported by your monitor/GPU
 - Your GPU scaling settings allow stretching
 - Your in-game display mode/fill behavior is not overriding the config
 - If needed, set VALORANT to **Fullscreen** with **Fill** checked, close the game, then run EasyTS again
-- If using Fullscreen Mode, make sure you selected the correct monitor(s) to disable
-- If using Config Mode, your Windows display resolution matches the resolution you applied in EasyTS
 
 EasyTS attempts to configure the required settings automatically, but some systems may override them on launch.
 
@@ -271,15 +248,11 @@ You may also need to check your NVIDIA Control Panel, AMD Software, Intel Graphi
 
 ---
 
-### Does Fullscreen Mode automatically restore my display after I close VALORANT?
-
-No. EasyTS does not watch for VALORANT closing and does not automatically restore your display. You must manually click **Re-enable Monitors** in Settings once you are done playing.
-
----
-
 ### My monitor seems stuck disabled. How do I fix it?
 
-Open EasyTS, go to **Settings → Re-enable Monitors**, and click **Re-enable**. This works independently of any other state in the app and is always available as a recovery option.
+This should only apply if you tested EasyTS v3.0.0 or v3.0.1.
+
+Open EasyTS, go to **Settings → Re-enable Monitors**, and click **Re-enable**. This works independently of any other state in the app and is available as a recovery option.
 
 If EasyTS itself will not open, you can also manually re-enable your monitor through Windows Device Manager: right-click the Start button → Device Manager → expand Monitors → right-click the disabled monitor → Enable device.
 
@@ -304,7 +277,7 @@ Delete the executable.
 To completely undo changes:
 
 1. Use the built-in **Restore** button in the saved accounts section.
-2. If you used Fullscreen Mode, use **Re-enable Monitors** in Settings first.
+2. If you tested Fullscreen Mode in v3.0.0 or v3.0.1, use **Re-enable Monitors** in Settings.
 3. Or manually reset VALORANT video settings in-game.
 4. Or delete `GameUserSettings.ini`.
 

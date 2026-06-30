@@ -148,28 +148,6 @@
     }
     #btn-update-dismiss:hover { background:var(--surface2); color:var(--text); }
 
-    #mode-toggle {
-      width: 100%; max-width: 560px;
-      display: flex; gap: 6px;
-      flex-shrink: 0; margin-bottom: 14px;
-    }
-    .mode-btn {
-      flex: 1; height: 38px;
-      border-radius: 8px;
-      border: 1px solid var(--border2);
-      background: var(--surface);
-      color: var(--muted);
-      font-family: 'Outfit', sans-serif;
-      font-size: 12.5px; font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
-    }
-    .mode-btn.active {
-      background: var(--accent-dim);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .mode-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
     .input-wrapper {
       width: 100%; max-width: 560px;
@@ -189,134 +167,6 @@
     }
     .input-wrapper input::placeholder { color: var(--muted2); }
 
-    #fullscreen-card {
-      width: 100%; max-width: 560px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
-      flex-shrink: 0;
-      margin-top: 10px;
-      display: none;
-    }
-    #fullscreen-card.visible { display: block; }
-
-    #fullscreen-locked {
-      width: 100%; max-width: 560px;
-      background: var(--surface);
-      border: 1px dashed var(--border2);
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      flex-shrink: 0;
-      margin-top: 10px;
-      display: none;
-    }
-    #fullscreen-locked.visible { display: block; }
-    #fullscreen-locked-text { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-    #btn-fullscreen-update {
-      height: 32px; padding: 0 16px; border-radius: 7px;
-      border: 1px solid rgba(255,70,85,0.35);
-      background: var(--accent-dim);
-      color: var(--accent);
-      font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
-      cursor: pointer;
-    }
-
-    #fullscreen-warning {
-      font-size: 11px; color: var(--muted);
-      line-height: 1.6; margin-bottom: 12px;
-    }
-    #fullscreen-warning span { color: #ffaa00; }
-
-    #monitor-mode-row {
-      display: flex; gap: 8px;
-      margin-bottom: 10px;
-    }
-    .monitor-mode-option {
-      flex: 1; display: flex; align-items: center; gap: 7px;
-      padding: 8px 10px;
-      border-radius: 7px;
-      border: 1px solid var(--border2);
-      background: var(--surface2);
-      cursor: pointer;
-      font-size: 11.5px; color: var(--text);
-    }
-    .monitor-mode-option input { accent-color: var(--accent); }
-
-    #monitor-list {
-      display: none;
-      flex-direction: column; gap: 6px;
-      margin-bottom: 12px;
-    }
-    #monitor-list.visible { display: flex; }
-    .monitor-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 10px;
-      border-radius: 7px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      font-size: 11.5px; color: var(--text);
-    }
-    .monitor-row input { accent-color: var(--accent); }
-
-    #btn-apply-fullscreen {
-      width: 100%; height: 42px;
-      border-radius: 8px; border: 1px solid rgba(255,170,0,0.35);
-      background: rgba(255,170,0,0.06);
-      color: #ffaa00;
-      font-family: 'Outfit', sans-serif;
-      font-size: 13px; font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    #btn-apply-fullscreen:hover { background: rgba(255,170,0,0.12); border-color: #ffaa00; }
-    #btn-apply-fullscreen:disabled { opacity: 0.35; cursor: not-allowed; }
-
-    #fs-overlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
-      align-items: center; justify-content: center;
-      z-index: 100;
-    }
-    #fs-overlay.visible { display: flex; }
-    #fs-modal {
-      width: 320px;
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 14px;
-      padding: 22px;
-      text-align: center;
-    }
-    #fs-modal-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-    #fs-modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
-    #fs-countdown {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 28px; font-weight: 700;
-      color: #ffaa00; margin-bottom: 16px;
-    }
-    #fs-modal-actions { display: flex; gap: 8px; }
-    #btn-fs-keep, #btn-fs-revert {
-      flex: 1; height: 38px; border-radius: 8px;
-      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
-      cursor: pointer; border: none;
-    }
-    #btn-fs-keep { background: var(--accent); color: #fff; }
-    #btn-fs-revert { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
-    #fs-kept-note {
-      width: 100%; max-width: 560px;
-      background: rgba(255,170,0,0.07);
-      border: 1px solid rgba(255,170,0,0.25);
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 11.5px; color: #ffaa00;
-      line-height: 1.5;
-      margin-top: 10px;
-      flex-shrink: 0;
-      display: none;
-    }
-    #fs-kept-note.visible { display: block; }
 
     #presets-wrap { width: 100%; max-width: 560px; flex-shrink: 0; }
     #presets-list { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -593,51 +443,12 @@
       </div>
     </div>
 
-    <div id="mode-toggle">
-      <button class="mode-btn active" id="mode-btn-config">Config Mode</button>
-      <button class="mode-btn" id="mode-btn-fullscreen">Fullscreen Mode</button>
-    </div>
 
     <div class="section-label">Resolution</div>
     <div class="input-wrapper">
       <input type="text" id="resolution-input" placeholder="e.g. 1440x1080" autocomplete="off" spellcheck="false"/>
     </div>
 
-    <div id="fullscreen-locked">
-      <div id="fullscreen-locked-text">Fullscreen Mode requires EasyTS v3.0.0 or newer.</div>
-      <button id="btn-fullscreen-update">Download Update</button>
-    </div>
-
-    <div id="fullscreen-card">
-      <div id="fullscreen-warning">
-        Fullscreen Mode temporarily disables monitor device(s) and sets VALORANT to actual Fullscreen
-        instead of Windowed, for the lowest possible input delay.<br><br>
-        <span>⚠ Requires administrator permissions</span> — a UAC prompt will appear.<br>
-        <span>⚠ Your screen will briefly flicker</span> while monitors are disabled — this is normal,
-        you will still be able to see and use your screen.<br><br>
-        Player models may appear visually wider, similar to other stretched-resolution games.
-        VALORANT's actual hit detection is unaffected.<br><br>
-        <span>⚠ EasyTS does not watch for VALORANT closing.</span> Monitors stay disabled until you
-        manually click Re-enable Monitors in Settings once you are done playing.
-      </div>
-      <div id="monitor-mode-row">
-        <label class="monitor-mode-option">
-          <input type="radio" name="monitor-mode" value="all" checked/>
-          Disable all monitors (recommended)
-        </label>
-        <label class="monitor-mode-option">
-          <input type="radio" name="monitor-mode" value="custom"/>
-          Choose manually
-        </label>
-      </div>
-      <div id="monitor-list"></div>
-      <button id="btn-apply-fullscreen">Apply Fullscreen Mode</button>
-    </div>
-
-    <div id="fs-kept-note">
-      Fullscreen Mode is active. Monitors will stay disabled until you click
-      <b>Re-enable Monitors</b> in Settings once you are done playing.
-    </div>
 
     <div id="presets-wrap">
       <div class="section-label">
@@ -692,17 +503,6 @@
 
   </main>
 
-  <div id="fs-overlay">
-    <div id="fs-modal">
-      <div id="fs-modal-title">Display Changed</div>
-      <div id="fs-modal-sub">Confirm the display still looks correct.<br>Reverting automatically if not confirmed.</div>
-      <div id="fs-countdown">15</div>
-      <div id="fs-modal-actions">
-        <button id="btn-fs-keep">Keep</button>
-        <button id="btn-fs-revert">Revert</button>
-      </div>
-    </div>
-  </div>
 
   <div id="page-settings" class="page">
 
@@ -736,7 +536,7 @@
       <div class="settings-row">
         <div>
           <div class="settings-row-label">Re-enable Monitors</div>
-          <div class="settings-row-sub">Safety net for Fullscreen Mode — re-enables any disabled monitor devices</div>
+          <div class="settings-row-sub">Recovery tool — re-enables monitor devices disabled by older EasyTS versions</div>
         </div>
         <button class="settings-btn settings-btn-accent" id="btn-enable-monitors">Re-enable</button>
       </div>
@@ -777,7 +577,6 @@
     const RELEASES_PAGE = "https://github.com/ahhmilo/EasyTS/releases/latest";
     const RELEASES_API  = "https://api.github.com/repos/ahhmilo/EasyTS/releases/latest";
     const GITHUB_PAGE   = "https://github.com/ahhmilo/EasyTS";
-    const FULLSCREEN_MODE_MIN_VERSION = "v3.0.0";
 
     const settingsBtn = document.getElementById('btn-settings');
     let settingsOpen  = false;
@@ -815,20 +614,7 @@
       }
     }
 
-    function versionAtLeast(current, required) {
-      if (!current) return false;
-      const c = current.replace(/^v/i, '').split('.').map(n => parseInt(n) || 0);
-      const r = required.replace(/^v/i, '').split('.').map(n => parseInt(n) || 0);
-      for (let i = 0; i < Math.max(c.length, r.length); i++) {
-        const cv = c[i] || 0, rv = r[i] || 0;
-        if (cv > rv) return true;
-        if (cv < rv) return false;
-      }
-      return true;
-    }
-
     let exeVersion = null;
-    let fullscreenModeAvailable = false;
 
     async function refreshPresets() {
       const presets = await api(() => window.pywebview.api.get_presets());
@@ -972,129 +758,6 @@
     document.getElementById('btn-latest-release').addEventListener('click', () =>
       api(() => window.pywebview.api.open_url(RELEASES_PAGE))
     );
-    document.getElementById('btn-fullscreen-update').addEventListener('click', () =>
-      api(() => window.pywebview.api.open_url(RELEASES_PAGE))
-    );
-
-    let currentMode = 'config';
-
-    document.getElementById('mode-btn-config').addEventListener('click', () => {
-      currentMode = 'config';
-      document.getElementById('mode-btn-config').classList.add('active');
-      document.getElementById('mode-btn-fullscreen').classList.remove('active');
-      document.getElementById('fullscreen-card').classList.remove('visible');
-      document.getElementById('fullscreen-locked').classList.remove('visible');
-      startBtn.style.display = 'flex';
-    });
-
-    document.getElementById('mode-btn-fullscreen').addEventListener('click', async () => {
-      currentMode = 'fullscreen';
-      document.getElementById('mode-btn-fullscreen').classList.add('active');
-      document.getElementById('mode-btn-config').classList.remove('active');
-      startBtn.style.display = 'none';
-
-      if (!fullscreenModeAvailable) {
-        document.getElementById('fullscreen-locked').classList.add('visible');
-        document.getElementById('fullscreen-card').classList.remove('visible');
-        return;
-      }
-
-      document.getElementById('fullscreen-locked').classList.remove('visible');
-      document.getElementById('fullscreen-card').classList.add('visible');
-      await loadMonitors();
-    });
-
-    document.querySelectorAll('input[name="monitor-mode"]').forEach(radio => {
-      radio.addEventListener('change', () => {
-        const custom = document.querySelector('input[name="monitor-mode"]:checked').value === 'custom';
-        document.getElementById('monitor-list').classList.toggle('visible', custom);
-      });
-    });
-
-    let cachedMonitors = [];
-
-    async function loadMonitors() {
-      const monitors = await api(() => window.pywebview.api.get_monitors());
-      cachedMonitors = monitors || [];
-      const list = document.getElementById('monitor-list');
-      list.innerHTML = '';
-      cachedMonitors.forEach(m => {
-        const row = document.createElement('label');
-        row.className = 'monitor-row';
-        row.innerHTML = `<input type="checkbox" value="${m.instance_id}" checked/> ${m.description || 'Unknown Monitor'}`;
-        list.appendChild(row);
-      });
-    }
-
-    function getSelectedMonitorIds() {
-      const mode = document.querySelector('input[name="monitor-mode"]:checked').value;
-      if (mode === 'all') {
-        return cachedMonitors.map(m => m.instance_id);
-      }
-      return Array.from(document.querySelectorAll('#monitor-list input:checked')).map(cb => cb.value);
-    }
-
-    document.getElementById('btn-apply-fullscreen').addEventListener('click', async () => {
-      const resolution = resInput.value.trim();
-      if (!resolution) { addLog('Please enter a resolution.', 'error'); return; }
-      if (!/^\d{3,4}x\d{3,4}$/i.test(resolution)) { addLog('Invalid format. Use WIDTHxHEIGHT', 'error'); return; }
-
-      const ids = getSelectedMonitorIds();
-      if (ids.length === 0) { addLog('No monitors selected.', 'error'); return; }
-
-      logConsole.innerHTML = '';
-      addLog(`Applying Fullscreen Mode with resolution ${resolution}...`, 'info');
-      document.getElementById('btn-apply-fullscreen').disabled = true;
-
-      const result = await api(() => window.pywebview.api.apply_fullscreen_mode(resolution, ids));
-
-      document.getElementById('btn-apply-fullscreen').disabled = false;
-
-      if (result && result.success) {
-        showFullscreenConfirm();
-      }
-    });
-
-    let fsCountdownTimer = null;
-    let fsCountdownValue = 15;
-
-    function showFullscreenConfirm() {
-      fsCountdownValue = 15;
-      document.getElementById('fs-countdown').textContent = fsCountdownValue;
-      document.getElementById('fs-overlay').classList.add('visible');
-
-      fsCountdownTimer = setInterval(() => {
-        fsCountdownValue--;
-        document.getElementById('fs-countdown').textContent = fsCountdownValue;
-        if (fsCountdownValue <= 0) {
-          clearInterval(fsCountdownTimer);
-          revertFullscreen();
-        }
-      }, 1000);
-    }
-
-    function hideFullscreenConfirm() {
-      if (fsCountdownTimer) clearInterval(fsCountdownTimer);
-      document.getElementById('fs-overlay').classList.remove('visible');
-    }
-
-    document.getElementById('btn-fs-keep').addEventListener('click', async () => {
-      hideFullscreenConfirm();
-      await api(() => window.pywebview.api.confirm_fullscreen_mode());
-      document.getElementById('fs-kept-note').classList.add('visible');
-    });
-
-    document.getElementById('btn-fs-revert').addEventListener('click', async () => {
-      hideFullscreenConfirm();
-      await revertFullscreen();
-    });
-
-    async function revertFullscreen() {
-      hideFullscreenConfirm();
-      addLog('Reverting Fullscreen Mode...', 'info');
-      await api(() => window.pywebview.api.revert_fullscreen_mode());
-      document.getElementById('fs-kept-note').classList.remove('visible');
-    }
 
     document.getElementById('btn-enable-monitors').addEventListener('click', async () => {
       addLog('Re-enabling monitor device(s)...', 'info');
@@ -1102,7 +765,6 @@
         () => window.pywebview.api.enable_all_monitors(),
         'This feature requires a newer version of EasyTS. Please update.'
       );
-      document.getElementById('fs-kept-note').classList.remove('visible');
     });
 
     let bbCollapsed = false;
@@ -1162,7 +824,6 @@
       if (exeVersion) {
         document.getElementById('settings-version-label').textContent = exeVersion;
       }
-      fullscreenModeAvailable = versionAtLeast(exeVersion, FULLSCREEN_MODE_MIN_VERSION);
 
       refreshAccounts();
       refreshPresets();

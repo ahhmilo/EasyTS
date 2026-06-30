@@ -17,9 +17,9 @@ Config Mode avoids Device Manager entirely, while Fullscreen Mode offers an adva
 
 ## Preview
 
-| Main page | Settings page |
-|---|---|
-| ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/main_page.png) | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/settings_page.png) |
+| Config Mode | Fullscreen Mode | Settings |
+|---|---|---|
+| ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/main_page.png) | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/fullscreen_mode.png) | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/settings_page.png) |
 
 ---
 

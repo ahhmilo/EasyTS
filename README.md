@@ -9,7 +9,9 @@
 
 # EasyTS
 
-A simple Windows tool for applying VALORANT True Stretch resolutions without manually editing config files.
+A simple Windows tool for applying VALORANT True Stretch resolutions without manually editing config files or messing around with Device Manager.
+
+Supports custom resolutions, saved accounts, presets, automatic backups, and one-click restore.
 
 ---
 

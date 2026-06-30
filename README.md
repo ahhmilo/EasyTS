@@ -9,9 +9,9 @@
 
 # EasyTS
 
-A simple Windows tool for applying VALORANT True Stretch resolutions without manually editing config files or messing around with Device Manager.
+A simple Windows tool for applying VALORANT True Stretch resolutions through a clean UI.
 
-Supports custom resolutions, saved accounts, presets, automatic backups, one-click restore, and an advanced Fullscreen Mode for lower input delay.
+Config Mode avoids Device Manager entirely, while Fullscreen Mode offers an advanced lower-latency method using temporary monitor device handling.
 
 ---
 
@@ -96,7 +96,7 @@ Config Mode runs VALORANT in Windowed mode and does not touch any system display
 
 ### Fullscreen Mode (advanced, v3.0.0+)
 
-Fullscreen Mode is for users who want true fullscreen stretched resolution with the lowest possible input delay. It works by temporarily disabling your monitor device(s) in Windows so VALORANT cannot detect its native aspect ratio and is forced to use the resolution set in the config file instead.
+Fullscreen Mode is for users who want true fullscreen stretched resolution with lower input delay than Windowed mode. It works by temporarily disabling your monitor device(s) in Windows so VALORANT cannot detect its native aspect ratio and is forced to use the resolution set in the config file instead.
 
 1. Close VALORANT completely.
 2. Switch to **Fullscreen Mode** at the top of EasyTS.

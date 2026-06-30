@@ -28,7 +28,7 @@ import tkinter as tk
 import threading
 from typing import Optional, Tuple
 
-CURRENT_VERSION = "v3.0.0"
+CURRENT_VERSION = "v3.0.1"
 GITHUB_URL      = "https://github.com/ahhmilo/EasyTS"
 
 WEBVIEW2_DOWNLOAD_URL = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
@@ -110,7 +110,19 @@ def get_backup_path(folder: str, create_dir: bool = True) -> str:
     return os.path.join(backup_dir, "GameUserSettings.ini.bak")
 
 def backup_config(config_file: str, folder: str) -> None:
-    shutil.copy2(config_file, get_backup_path(folder, create_dir=True))
+    backup_path = get_backup_path(folder, create_dir=True)
+    shutil.copy2(config_file, backup_path)
+    make_file_writable(backup_path)
+
+def make_file_writable(path: str) -> None:
+    file_mode = os.stat(path).st_mode
+    if not (file_mode & stat.S_IWRITE):
+        os.chmod(path, file_mode | stat.S_IWRITE)
+
+def make_file_read_only(path: str) -> None:
+    file_mode = os.stat(path).st_mode
+    if file_mode & stat.S_IWRITE:
+        os.chmod(path, file_mode & ~stat.S_IWRITE)
 
 def get_backup_date(folder: str) -> Optional[str]:
     path = get_backup_path(folder, create_dir=False)
@@ -190,9 +202,7 @@ def get_riot_account_info(port: int, auth_token: str) -> Tuple[str, str, str]:
     return puuid, region_folder, name_tag
 
 def modify_game_user_settings(config_file: str, width: int, height: int) -> None:
-    file_mode = os.stat(config_file).st_mode
-    if not (file_mode & stat.S_IWRITE):
-        os.chmod(config_file, file_mode | stat.S_IWRITE)
+    make_file_writable(config_file)
 
     with open(config_file, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -327,9 +337,7 @@ def run_elevated_pnp_action(instance_ids: list, enable: bool) -> None:
         pass
 
 def modify_game_user_settings_fullscreen(config_file: str, width: int, height: int) -> None:
-    file_mode = os.stat(config_file).st_mode
-    if not (file_mode & stat.S_IWRITE):
-        os.chmod(config_file, file_mode | stat.S_IWRITE)
+    make_file_writable(config_file)
 
     with open(config_file, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -639,6 +647,8 @@ class Api:
 
             log_to_ui(self._window, f"Applying {width}x{height} + fill mode...", "info")
             modify_game_user_settings(config_file, width, height)
+            make_file_read_only(config_file)
+            log_to_ui(self._window, "Config locked as read-only so VALORANT cannot switch Fill back to Letterbox.", "info")
 
             upsert_account(name_tag, account_folder)
             log_to_ui(self._window,
@@ -682,6 +692,8 @@ class Api:
 
             log_to_ui(self._window, f"Applying {width}x{height} + fill mode...", "info")
             modify_game_user_settings(config_file, width, height)
+            make_file_read_only(config_file)
+            log_to_ui(self._window, "Config locked as read-only so VALORANT cannot switch Fill back to Letterbox.", "info")
 
             upsert_account(name_tag, folder)
             log_to_ui(self._window,
@@ -877,6 +889,8 @@ Read-Host "  Press ENTER to close"
 
             log_to_ui(self._window, f"Applying {width}x{height} + fullscreen...", "info")
             modify_game_user_settings_fullscreen(config_file, width, height)
+            make_file_read_only(config_file)
+            log_to_ui(self._window, "Config locked as read-only so VALORANT cannot switch Fill back to Letterbox.", "info")
             upsert_account(name_tag, account_folder)
 
             save_fullscreen_state({
@@ -920,10 +934,9 @@ Read-Host "  Press ENTER to close"
                         get_valorant_config_path(), folder, "WindowsClient", "GameUserSettings.ini"
                     )
                     if os.path.isfile(config_file):
-                        file_mode = os.stat(config_file).st_mode
-                        if not (file_mode & stat.S_IWRITE):
-                            os.chmod(config_file, file_mode | stat.S_IWRITE)
+                        make_file_writable(config_file)
                         shutil.copy2(bak_path, config_file)
+                        make_file_writable(config_file)
 
             clear_fullscreen_state()
             log_to_ui(self._window, "Fullscreen Mode reverted.", "success")
@@ -940,7 +953,7 @@ Read-Host "  Press ENTER to close"
         save_fullscreen_state(state)
         log_to_ui(
             self._window,
-            "Fullscreen Mode kept. You can now launch VALORANT. Re-enable monitors in Settings when done playing.",
+            "Fullscreen Mode kept. You can now launch VALORANT. Re-enable monitors in Settings when done playing to remove the config read-only lock.",
             "success"
         )
         return {"success": True}
@@ -948,6 +961,7 @@ Read-Host "  Press ENTER to close"
     def enable_all_monitors(self) -> dict:
         try:
             state = load_fullscreen_state()
+            folder = state.get("folder") if state else None
             instance_ids = state.get("instance_ids", []) if state else []
 
             if not instance_ids:
@@ -957,13 +971,25 @@ Read-Host "  Press ENTER to close"
                     if m.get("status", "").lower() == "disabled"
                 ]
 
-            if not instance_ids:
-                log_to_ui(self._window, "No disabled monitors found.", "muted")
-                return {"success": True}
+            if instance_ids:
+                run_elevated_pnp_action(instance_ids, enable=True)
 
-            run_elevated_pnp_action(instance_ids, enable=True)
-            clear_fullscreen_state()
-            log_to_ui(self._window, "All monitor devices re-enabled.", "success")
+            if folder:
+                config_file = os.path.join(
+                    get_valorant_config_path(), folder, "WindowsClient", "GameUserSettings.ini"
+                )
+                if os.path.isfile(config_file):
+                    make_file_writable(config_file)
+
+            if state:
+                clear_fullscreen_state()
+
+            if instance_ids:
+                log_to_ui(self._window, "All monitor devices re-enabled. Config read-only lock removed.", "success")
+            elif folder:
+                log_to_ui(self._window, "No disabled monitors found. Config read-only lock removed.", "success")
+            else:
+                log_to_ui(self._window, "No disabled monitors found.", "muted")
             return {"success": True}
 
         except Exception as e:
@@ -983,11 +1009,10 @@ Read-Host "  Press ENTER to close"
             if not os.path.isfile(config_file):
                 raise ValorantConfigError("Config file not found. Cannot restore.")
 
-            file_mode = os.stat(config_file).st_mode
-            if not (file_mode & stat.S_IWRITE):
-                os.chmod(config_file, file_mode | stat.S_IWRITE)
+            make_file_writable(config_file)
 
             shutil.copy2(bak_path, config_file)
+            make_file_writable(config_file)
 
             name_tag = next((a["name_tag"] for a in load_accounts() if a["folder"] == folder), folder)
             log_to_ui(self._window, f"Backup restored for {name_tag}.", "success")

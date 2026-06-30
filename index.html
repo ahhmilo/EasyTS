@@ -535,10 +535,10 @@
       </div>
       <div class="settings-row">
         <div>
-          <div class="settings-row-label">Re-enable Monitors</div>
-          <div class="settings-row-sub">Recovery tool — re-enables monitor devices disabled by older EasyTS versions</div>
+          <div class="settings-row-label">Read-only Config Lock</div>
+          <div class="settings-row-sub">Optional: lock GameUserSettings.ini after applying so VALORANT cannot overwrite Fill settings</div>
         </div>
-        <button class="settings-btn settings-btn-accent" id="btn-enable-monitors">Re-enable</button>
+        <button class="settings-btn" id="btn-readonly-toggle">Off</button>
       </div>
       <div class="settings-row">
         <div>
@@ -759,12 +759,31 @@
       api(() => window.pywebview.api.open_url(RELEASES_PAGE))
     );
 
-    document.getElementById('btn-enable-monitors').addEventListener('click', async () => {
-      addLog('Re-enabling monitor device(s)...', 'info');
-      await api(
-        () => window.pywebview.api.enable_all_monitors(),
+
+
+    let readOnlyLockEnabled = false;
+
+    async function refreshReadOnlyLockSetting() {
+      const enabled = await api(
+        () => window.pywebview.api.get_read_only_lock_enabled(),
         'This feature requires a newer version of EasyTS. Please update.'
       );
+      if (enabled === null) return;
+      readOnlyLockEnabled = !!enabled;
+      const btn = document.getElementById('btn-readonly-toggle');
+      btn.textContent = readOnlyLockEnabled ? 'On' : 'Off';
+      btn.classList.toggle('settings-btn-accent', readOnlyLockEnabled);
+    }
+
+    document.getElementById('btn-readonly-toggle').addEventListener('click', async () => {
+      const result = await api(
+        () => window.pywebview.api.set_read_only_lock_enabled(!readOnlyLockEnabled),
+        'This feature requires a newer version of EasyTS. Please update.'
+      );
+      if (result && result.success) {
+        await refreshReadOnlyLockSetting();
+        addLog(readOnlyLockEnabled ? 'Read-only config lock enabled.' : 'Read-only config lock disabled.', 'info');
+      }
     });
 
     let bbCollapsed = false;

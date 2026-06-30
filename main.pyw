@@ -28,7 +28,7 @@ import tkinter as tk
 import threading
 from typing import Optional, Tuple
 
-CURRENT_VERSION = "v3.0.2"
+CURRENT_VERSION = "v3.0.3"
 GITHUB_URL      = "https://github.com/ahhmilo/EasyTS"
 
 WEBVIEW2_DOWNLOAD_URL = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
@@ -62,6 +62,38 @@ def get_accounts_path() -> str:
 
 def get_presets_path() -> str:
     return os.path.join(get_easysts_dir(), "presets.json")
+
+def get_settings_path() -> str:
+    return os.path.join(get_easysts_dir(), "settings.json")
+
+def load_settings() -> dict:
+    defaults = {"lock_config_read_only": False}
+    path = get_settings_path()
+    if not os.path.isfile(path):
+        return defaults
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return defaults
+        merged = defaults.copy()
+        merged.update(data)
+        return merged
+    except Exception:
+        return defaults
+
+def save_settings(settings: dict) -> None:
+    with open(get_settings_path(), "w", encoding="utf-8") as f:
+        json.dump(settings, f, indent=2, ensure_ascii=False)
+
+def is_read_only_lock_enabled() -> bool:
+    return bool(load_settings().get("lock_config_read_only", False))
+
+def set_read_only_lock_enabled(enabled: bool) -> None:
+    settings = load_settings()
+    settings["lock_config_read_only"] = bool(enabled)
+    save_settings(settings)
+
 
 def load_accounts() -> list:
     path = get_accounts_path()
@@ -259,84 +291,6 @@ def modify_game_user_settings(config_file: str, width: int, height: int) -> None
 
 
 
-def get_fullscreen_state_path() -> str:
-    return os.path.join(get_easysts_dir(), "fullscreen_state.json")
-
-def load_fullscreen_state() -> Optional[dict]:
-    path = get_fullscreen_state_path()
-    if not os.path.isfile(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return None
-
-def save_fullscreen_state(state: dict) -> None:
-    with open(get_fullscreen_state_path(), "w", encoding="utf-8") as f:
-        json.dump(state, f, indent=2, ensure_ascii=False)
-
-def clear_fullscreen_state() -> None:
-    path = get_fullscreen_state_path()
-    if os.path.isfile(path):
-        os.remove(path)
-
-def list_monitor_devices() -> list:
-    try:
-        ps_script = (
-            "Get-PnpDevice -Class Monitor | "
-            "Select-Object InstanceId, FriendlyName, Status | "
-            "ConvertTo-Json -Compress"
-        )
-        result = subprocess.run(
-            ["powershell.exe", "-NoProfile", "-Command", ps_script],
-            capture_output=True, text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
-        raw = result.stdout.strip()
-        if not raw:
-            return []
-        data = json.loads(raw)
-        if isinstance(data, dict):
-            data = [data]
-        monitors = []
-        for d in data:
-            inst_id = d.get("InstanceId")
-            if not inst_id:
-                continue
-            monitors.append({
-                "instance_id": inst_id,
-                "description": d.get("FriendlyName") or "Unknown Monitor",
-                "status": d.get("Status") or "",
-            })
-        return monitors
-    except Exception:
-        return []
-
-def run_elevated_pnp_action(instance_ids: list, enable: bool) -> None:
-    cmdlet = "Enable-PnpDevice" if enable else "Disable-PnpDevice"
-    lines = []
-    for inst_id in instance_ids:
-        escaped = inst_id.replace("'", "''")
-        lines.append(f"{cmdlet} -InstanceId '{escaped}' -Confirm:$false -ErrorAction SilentlyContinue")
-    script_body = "\n".join(lines)
-
-    ps1 = tempfile.mktemp(suffix=".ps1", prefix="EasyTS_monitors_")
-    with open(ps1, "w", encoding="utf-8") as f:
-        f.write(script_body + "\n")
-
-    ps_cmd = (
-        "Start-Process powershell -ArgumentList "
-        "'-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"" + ps1 + "\"' "
-        "-Verb RunAs -Wait -WindowStyle Hidden"
-    )
-    subprocess.run(["powershell.exe", "-Command", ps_cmd], creationflags=subprocess.CREATE_NO_WINDOW)
-    try:
-        os.remove(ps1)
-    except Exception:
-        pass
-
-
 def is_webview2_installed() -> bool:
     for hive, key_path in WEBVIEW2_REGISTRY_KEYS:
         try:
@@ -504,6 +458,17 @@ class Api:
         os.makedirs(folder, exist_ok=True)
         subprocess.Popen(["explorer", folder])
 
+    def get_read_only_lock_enabled(self) -> bool:
+        return is_read_only_lock_enabled()
+
+    def set_read_only_lock_enabled(self, enabled: bool) -> dict:
+        try:
+            set_read_only_lock_enabled(bool(enabled))
+            return {"success": True, "enabled": is_read_only_lock_enabled()}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
+
+
     def get_presets(self) -> list:
         return load_presets()
 
@@ -591,8 +556,12 @@ class Api:
 
             log_to_ui(self._window, f"Applying {width}x{height} + fill mode...", "info")
             modify_game_user_settings(config_file, width, height)
-            make_file_read_only(config_file)
-            log_to_ui(self._window, "Config locked as read-only so VALORANT cannot switch Fill back to Letterbox.", "info")
+            if is_read_only_lock_enabled():
+                make_file_read_only(config_file)
+                log_to_ui(self._window, "Read-only lock enabled. Config locked after applying.", "info")
+            else:
+                make_file_writable(config_file)
+                log_to_ui(self._window, "Read-only lock disabled. Config left writable after applying.", "info")
 
             upsert_account(name_tag, account_folder)
             log_to_ui(self._window,
@@ -636,8 +605,12 @@ class Api:
 
             log_to_ui(self._window, f"Applying {width}x{height} + fill mode...", "info")
             modify_game_user_settings(config_file, width, height)
-            make_file_read_only(config_file)
-            log_to_ui(self._window, "Config locked as read-only so VALORANT cannot switch Fill back to Letterbox.", "info")
+            if is_read_only_lock_enabled():
+                make_file_read_only(config_file)
+                log_to_ui(self._window, "Read-only lock enabled. Config locked after applying.", "info")
+            else:
+                make_file_writable(config_file)
+                log_to_ui(self._window, "Read-only lock disabled. Config left writable after applying.", "info")
 
             upsert_account(name_tag, folder)
             log_to_ui(self._window,
@@ -765,44 +738,6 @@ Read-Host "  Press ENTER to close"
             log_to_ui(self._window, f"Error launching fix: {e}", "error")
             return {"success": False}
 
-
-    def enable_all_monitors(self) -> dict:
-        try:
-            state = load_fullscreen_state()
-            folder = state.get("folder") if state else None
-            instance_ids = state.get("instance_ids", []) if state else []
-
-            if not instance_ids:
-                monitors = list_monitor_devices()
-                instance_ids = [
-                    m["instance_id"] for m in monitors
-                    if m.get("status", "").lower() == "disabled"
-                ]
-
-            if instance_ids:
-                run_elevated_pnp_action(instance_ids, enable=True)
-
-            if folder:
-                config_file = os.path.join(
-                    get_valorant_config_path(), folder, "WindowsClient", "GameUserSettings.ini"
-                )
-                if os.path.isfile(config_file):
-                    make_file_writable(config_file)
-
-            if state:
-                clear_fullscreen_state()
-
-            if instance_ids:
-                log_to_ui(self._window, "All monitor devices re-enabled. Config read-only lock removed.", "success")
-            elif folder:
-                log_to_ui(self._window, "No disabled monitors found. Config read-only lock removed.", "success")
-            else:
-                log_to_ui(self._window, "No disabled monitors found.", "muted")
-            return {"success": True}
-
-        except Exception as e:
-            log_to_ui(self._window, f"Error: {e}", "error")
-            return {"success": False}
 
     def restore_account(self, folder: str) -> dict:
         try:

@@ -9,9 +9,7 @@
 
 # EasyTS
 
-A lightweight Windows utility for applying VALORANT True Stretch resolutions without manually editing `GameUserSettings.ini`.
-
-EasyTS automatically finds the correct Riot account config and applies custom stretched resolutions like `1440x1080`, `1280x1024`, or `1600x1080` through a simple graphical interface. It also supports saved accounts, resolution presets, automatic backups, and one-click restore.
+A simple Windows tool for applying VALORANT True Stretch resolutions without manually editing config files.
 
 ---
 

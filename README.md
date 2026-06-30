@@ -90,9 +90,10 @@ WebView2 is usually pre-installed on Windows 11. Some Windows 10 or stripped-dow
 5. Optionally save the resolution as a preset.
 6. Click **Start — Auto-detect Account**.
 7. Wait for the success message in the log output.
-8. Launch VALORANT.
+8. Set your Windows display resolution to the same resolution you entered in EasyTS.
+9. Launch VALORANT.
 
-Config Mode runs VALORANT in Windowed mode and does not touch any system display settings. It is the safest and most reversible option, and is recommended for most users.
+Config Mode runs VALORANT in Windowed mode and does not touch Device Manager or monitor devices. It is the safest and most reversible option, but you should manually set your Windows display resolution to match the resolution you applied.
 
 ### Fullscreen Mode (advanced, v3.0.0+)
 
@@ -232,6 +233,18 @@ EasyTS checks if VALORANT is running and warns you before applying changes, in b
 
 ---
 
+### Do I need to change my Windows display resolution?
+
+It depends on the mode.
+
+For **Config Mode**, yes. Set your Windows display resolution to the same stretched resolution you entered in EasyTS before launching VALORANT. For example, if you apply `1440x1080` in EasyTS Config Mode, set Windows to `1440x1080` too.
+
+For **Fullscreen Mode**, no. Leave Windows at your monitor's native resolution. EasyTS writes the stretched resolution to VALORANT's config and uses temporary monitor device handling so VALORANT can launch with that fullscreen resolution.
+
+For both modes, the custom resolution should be supported by your GPU/monitor.
+
+---
+
 ### Why is True Stretch not working?
 
 Check the following:
@@ -242,6 +255,7 @@ Check the following:
 - Your in-game display mode/fill behavior is not overriding the config
 - If needed, set VALORANT to **Fullscreen** with **Fill** checked, close the game, then run EasyTS again
 - If using Fullscreen Mode, make sure you selected the correct monitor(s) to disable
+- If using Config Mode, your Windows display resolution matches the resolution you applied in EasyTS
 
 EasyTS attempts to configure the required settings automatically, but some systems may override them on launch.
 

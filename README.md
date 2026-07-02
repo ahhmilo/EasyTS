@@ -301,7 +301,7 @@ You can delete that folder if you also want to remove EasyTS presets, saved acco
 Open an issue on GitHub or contact me on Discord:
 
 ```text
-vestryman
+sadkttn67
 ```
 
 ---

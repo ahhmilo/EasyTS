@@ -28,7 +28,7 @@ import tkinter as tk
 import threading
 from typing import Optional, Tuple
 
-CURRENT_VERSION = "v3.0.3"
+CURRENT_VERSION = "v3.0.4"
 GITHUB_URL      = "https://github.com/ahhmilo/EasyTS"
 
 WEBVIEW2_DOWNLOAD_URL = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
@@ -184,6 +184,69 @@ def get_valorant_config_path() -> str:
     if not os.path.isdir(saved_config):
         raise ValorantConfigError(r"VALORANT Saved\Config directory not found.")
     return saved_config
+
+def get_config_file_for_folder(saved_config_dir: str, folder: str) -> Optional[str]:
+    for platform_folder in ("WindowsClient", "Windows"):
+        config_file = os.path.join(saved_config_dir, folder, platform_folder, "GameUserSettings.ini")
+        if os.path.isfile(config_file):
+            return config_file
+    return None
+
+def sort_config_matches(matches: list, preferred_folder: Optional[str] = None) -> list:
+    preferred = preferred_folder.lower() if preferred_folder else None
+
+    def sort_key(item):
+        folder, config_file = item
+        preferred_rank = 0 if preferred and folder.lower() == preferred else 1
+        try:
+            mtime = os.path.getmtime(config_file)
+        except OSError:
+            mtime = 0
+        return (preferred_rank, -mtime, folder.lower())
+
+    return sorted(matches, key=sort_key)
+
+def get_config_files_for_puuid(saved_config_dir: str, puuid: str, preferred_folder: Optional[str] = None) -> list:
+    prefix = f"{puuid.lower()}-"
+    matches = []
+    try:
+        for name in os.listdir(saved_config_dir):
+            folder_path = os.path.join(saved_config_dir, name)
+            if os.path.isdir(folder_path) and name.lower().startswith(prefix):
+                config_file = get_config_file_for_folder(saved_config_dir, name)
+                if config_file:
+                    matches.append((name, config_file))
+    except OSError:
+        pass
+    return sort_config_matches(matches, preferred_folder)
+
+def resolve_account_configs(saved_config_dir: str, puuid: str, region_folder: str) -> list:
+    expected_folder = f"{puuid}-{region_folder}"
+    matches = get_config_files_for_puuid(saved_config_dir, puuid, expected_folder)
+    if matches:
+        return matches
+
+    raise ValorantConfigError(
+        "GameUserSettings.ini was not found for this Riot account. "
+        "EasyTS detected the account, but could not find any VALORANT config folder matching the account ID. "
+        "Please launch VALORANT once on this account, change any video setting, close the game, and try again."
+    )
+
+def resolve_saved_configs(saved_config_dir: str, folder: str) -> list:
+    if "-" in folder:
+        puuid = folder.rsplit("-", 1)[0]
+        matches = get_config_files_for_puuid(saved_config_dir, puuid, folder)
+        if matches:
+            return matches
+
+    config_file = get_config_file_for_folder(saved_config_dir, folder)
+    if config_file:
+        return [(folder, config_file)]
+
+    raise ValorantConfigError(
+        "Config file not found for this account. "
+        "Please launch VALORANT at least once with this account."
+    )
 
 def find_riot_lockfile() -> Optional[str]:
     localappdata = os.environ.get("LOCALAPPDATA")
@@ -539,28 +602,42 @@ class Api:
 
             log_to_ui(self._window, "Fetching VALORANT account...", "info")
             puuid, region_folder, name_tag = get_riot_account_info(port, auth_token)
-            account_folder = f"{puuid}-{region_folder}"
-            log_to_ui(self._window, f"Account: {name_tag} - {account_folder}", "success")
+            expected_folder = f"{puuid}-{region_folder}"
+            config_targets = resolve_account_configs(saved_config_dir, puuid, region_folder)
+            account_folder = config_targets[0][0]
 
-            config_file = os.path.join(
-                saved_config_dir, account_folder, "WindowsClient", "GameUserSettings.ini"
-            )
-            if not os.path.isfile(config_file):
-                raise ValorantConfigError(
-                    f"GameUserSettings.ini not found for {name_tag}. "
-                    "Please launch VALORANT at least once."
+            if account_folder != expected_folder:
+                log_to_ui(
+                    self._window,
+                    f"Region folder mismatch detected. Riot reported {expected_folder}, using {account_folder}.",
+                    "info"
                 )
 
+            if len(config_targets) > 1:
+                log_to_ui(
+                    self._window,
+                    f"Found {len(config_targets)} config folders for this account. Applying to all of them.",
+                    "info"
+                )
+
+            log_to_ui(self._window, f"Account: {name_tag} - {account_folder}", "success")
             log_to_ui(self._window, "Backing up config...", "info")
-            backup_config(config_file, account_folder)
+
+            for target_folder, config_file in config_targets:
+                backup_config(config_file, target_folder)
 
             log_to_ui(self._window, f"Applying {width}x{height} + fill mode...", "info")
-            modify_game_user_settings(config_file, width, height)
+
+            for target_folder, config_file in config_targets:
+                modify_game_user_settings(config_file, width, height)
+                if is_read_only_lock_enabled():
+                    make_file_read_only(config_file)
+                else:
+                    make_file_writable(config_file)
+
             if is_read_only_lock_enabled():
-                make_file_read_only(config_file)
                 log_to_ui(self._window, "Read-only lock enabled. Config locked after applying.", "info")
             else:
-                make_file_writable(config_file)
                 log_to_ui(self._window, "Read-only lock disabled. Config left writable after applying.", "info")
 
             upsert_account(name_tag, account_folder)
@@ -573,6 +650,7 @@ class Api:
         except Exception as e:
             log_to_ui(self._window, f"Error: {e}", "error")
             return {"success": False}
+
 
     def apply_to_saved(self, folder: str, resolution_str: str) -> dict:
         match = re.match(r"^(\d{3,4})x(\d{3,4})$", resolution_str.strip().lower())
@@ -588,28 +666,39 @@ class Api:
 
         try:
             saved_config_dir = get_valorant_config_path()
-            config_file = os.path.join(
-                saved_config_dir, folder, "WindowsClient", "GameUserSettings.ini"
-            )
-            if not os.path.isfile(config_file):
-                raise ValorantConfigError(
-                    "Config file not found for this account. "
-                    "Please launch VALORANT at least once with this account."
-                )
+            config_targets = resolve_saved_configs(saved_config_dir, folder)
+            resolved_folder = config_targets[0][0]
 
             name_tag = next((a["name_tag"] for a in load_accounts() if a["folder"] == folder), folder)
+            if resolved_folder != folder:
+                log_to_ui(self._window, f"Saved folder moved from {folder} to {resolved_folder}.", "info")
+                folder = resolved_folder
+
+            if len(config_targets) > 1:
+                log_to_ui(
+                    self._window,
+                    f"Found {len(config_targets)} config folders for this account. Applying to all of them.",
+                    "info"
+                )
 
             log_to_ui(self._window, f"Account: {name_tag} - {folder}", "success")
             log_to_ui(self._window, "Backing up config...", "info")
-            backup_config(config_file, folder)
+
+            for target_folder, config_file in config_targets:
+                backup_config(config_file, target_folder)
 
             log_to_ui(self._window, f"Applying {width}x{height} + fill mode...", "info")
-            modify_game_user_settings(config_file, width, height)
+
+            for target_folder, config_file in config_targets:
+                modify_game_user_settings(config_file, width, height)
+                if is_read_only_lock_enabled():
+                    make_file_read_only(config_file)
+                else:
+                    make_file_writable(config_file)
+
             if is_read_only_lock_enabled():
-                make_file_read_only(config_file)
                 log_to_ui(self._window, "Read-only lock enabled. Config locked after applying.", "info")
             else:
-                make_file_writable(config_file)
                 log_to_ui(self._window, "Read-only lock disabled. Config left writable after applying.", "info")
 
             upsert_account(name_tag, folder)
@@ -741,29 +830,32 @@ Read-Host "  Press ENTER to close"
 
     def restore_account(self, folder: str) -> dict:
         try:
-            bak_path = get_backup_path(folder, create_dir=False)
-            if not os.path.isfile(bak_path):
+            saved_config_dir = get_valorant_config_path()
+            config_targets = resolve_saved_configs(saved_config_dir, folder)
+
+            restored = 0
+            for target_folder, config_file in config_targets:
+                bak_path = get_backup_path(target_folder, create_dir=False)
+                if not os.path.isfile(bak_path):
+                    continue
+                make_file_writable(config_file)
+                shutil.copy2(bak_path, config_file)
+                make_file_writable(config_file)
+                restored += 1
+
+            if restored == 0:
                 log_to_ui(self._window, "No backup found for this account.", "error")
                 return {"success": False}
 
-            config_file = os.path.join(
-                get_valorant_config_path(), folder, "WindowsClient", "GameUserSettings.ini"
-            )
-            if not os.path.isfile(config_file):
-                raise ValorantConfigError("Config file not found. Cannot restore.")
-
-            make_file_writable(config_file)
-
-            shutil.copy2(bak_path, config_file)
-            make_file_writable(config_file)
-
             name_tag = next((a["name_tag"] for a in load_accounts() if a["folder"] == folder), folder)
-            log_to_ui(self._window, f"Backup restored for {name_tag}.", "success")
+            log_to_ui(self._window, f"Backup restored for {name_tag} across {restored} config folder(s).", "success")
             return {"success": True}
 
         except Exception as e:
             log_to_ui(self._window, f"Error: {e}", "error")
             return {"success": False}
+
+
 
 
 def main():

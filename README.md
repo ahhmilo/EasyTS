@@ -7,6 +7,9 @@
   <img src="assets/EasyTS_logo.png" width="160" alt="EasyTS logo">
 </p>
 
+> [!WARNING]
+> Reports indicate that a recent VALORANT update may have affected the current True Stretch method. I'm investigating the issue and as of rn, the tool might not work.
+
 # EasyTS
 
 A simple Windows tool for applying VALORANT True Stretch resolutions without manually editing config files.

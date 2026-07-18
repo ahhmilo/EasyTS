@@ -8,7 +8,7 @@
 </p>
 
 > [!WARNING]
-> Reports indicate that a recent VALORANT update may have affected the current True Stretch method. I'm investigating the issue and as of rn, the tool might not work.
+> Reports indicate that a recent VALORANT update may have affected the current True Stretch method. I'm investigating the issue and as of right now, the tool might not work.
 
 # EasyTS
 

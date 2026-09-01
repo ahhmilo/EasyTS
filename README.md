@@ -8,7 +8,7 @@
 </p>
 
 > [!WARNING]
-> Reports indicate that a recent VALORANT update may have affected the current True Stretch method. I'm investigating the issue and as of right now, the tool might not work.
+> The tool is broken, do not use.
 
 # EasyTS
 
@@ -304,7 +304,7 @@ You can delete that folder if you also want to remove EasyTS presets, saved acco
 Open an issue on GitHub or contact me on Discord (no this is not a url, this is my username on Discord):
 
 ```text
-cutedoggy.com
+xbzvx
 ```
 
 ---

@@ -7,14 +7,11 @@
   <img src="assets/EasyTS_logo.png" width="160" alt="EasyTS logo">
 </p>
 
-> [!WARNING]
-> The tool is broken, do not use.
-
 # EasyTS
 
-A simple Windows tool for applying VALORANT True Stretch resolutions without manually editing config files.
+A simple Windows tool for VALORANT True Stretch. Switch your display to a stretched resolution in one click, and get your original resolution back automatically when VALORANT closes.
 
-EasyTS focuses on the stable config-based True Stretch method: it applies the required VALORANT config values through a clean UI, supports saved accounts and presets, creates automatic backups, and includes one-click restore.
+EasyTS handles the parts that are normally done by hand: switching your Windows display resolution, turning the Windows monitor driver off and on, restoring your resolution after you play, saving presets, and fixing black bars on some laptops.
 
 ---
 
@@ -32,25 +29,34 @@ EasyTS focuses on the stable config-based True Stretch method: it applies the re
 |---|---|
 | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/without_true_stretch.png) | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/with_true_stretch.png) |
 
-Both screenshots use the same resolution (`1440x1080`). EasyTS applies the stretched/fill behavior automatically.
+Both screenshots use the same resolution (`1440x1080`). EasyTS switches your display to the stretched resolution for you.
+
+---
+
+## How it works
+
+True Stretch makes VALORANT render at a resolution whose aspect ratio does not match your monitor's native one, then stretches the image to fill the screen. EasyTS does this at the display level:
+
+1. You register your stretched resolution with your GPU driver once, as a custom resolution.
+2. EasyTS turns off the Windows monitor driver, so VALORANT can no longer read your monitor's native aspect ratio.
+3. Once you are in a match, you click a resolution in EasyTS and your display switches to it instantly.
+4. When VALORANT closes, EasyTS puts your original resolution back.
+
+EasyTS does not edit VALORANT's config files. Earlier versions did, and that method was removed in v4.0.0.
 
 ---
 
 ## Features
 
-- Instant VALORANT True Stretch setup
-- Custom stretched resolutions such as `1440x1080`, `1280x1024`, `1600x1080`, and more
-- Multi-account support with saved account switcher
-- Resolution presets for quick re-applying
-- Automatic config backup system with one-click restore
-- VALORANT running detection before applying changes
-- Automatic read-only config handling
-- Optional read-only config lock in Settings
+- One-click switching between popular stretched resolutions
+- Custom resolutions and saved presets
+- Automatic restore of your original resolution when VALORANT closes
+- Monitor driver on/off from a single card, with administrator permission requested only when needed
+- Live display card showing your current and original resolution
+- Black bars fix for some laptop users through registry scaling
 - Automatic WebView2 check with guided install if missing
 - Automatic update checker on startup
-- Lightweight standalone executable
-- Black bars fix for some laptop users through registry scaling
-- Simple graphical interface, no terminal required
+- Lightweight standalone executable, no terminal required
 
 ---
 
@@ -73,108 +79,89 @@ No installer is required.
 ## Requirements
 
 - Windows 10 or Windows 11
-- Riot Client installed and logged in
-- VALORANT installed
-- VALORANT completely closed while using EasyTS
+- A graphics driver that supports custom resolutions (NVIDIA Control Panel, AMD Software, or Intel Graphics Software)
+- Administrator permission for the monitor driver switch and the black bars fix. EasyTS asks through a normal Windows UAC prompt.
 - Microsoft WebView2 Runtime
+- An internet connection when EasyTS starts, because its interface is loaded from GitHub
 
 WebView2 is usually pre-installed on Windows 11. Some Windows 10 or stripped-down Windows installs may need it installed manually. EasyTS will prompt you automatically if WebView2 is missing.
 
 ---
 
+## Setup (one time)
+
+Do this before your first switch. The same guide is built into EasyTS under **Before you switch**.
+
+1. **Register the resolution with your GPU.** Windows can only switch to resolutions your graphics driver already knows. Create each stretched resolution as a custom resolution in NVIDIA Control Panel, AMD Software, or Intel Graphics Software.
+2. **Set GPU scaling to Full-screen.** In the same control panel, so the image fills the monitor. Not Aspect ratio, not Centered.
+3. **Set VALORANT's display options.** Display Mode: **Windowed Fullscreen**. Aspect Ratio Method: **Fill**.
+4. **Turn the monitor driver off in EasyTS**, before you launch VALORANT.
+
+---
+
 ## How to use EasyTS
 
-### Applying True Stretch
+1. Open EasyTS and check that the **Monitor driver** card says **Off**.
+2. Launch VALORANT and load into a match.
+3. Alt-tab to EasyTS and click a resolution, or type one and press **Apply**.
+4. Alt-tab back to VALORANT.
+5. When you are done, close VALORANT. With EasyTS still open, your original resolution comes back automatically.
 
-1. Close VALORANT completely.
-2. Make sure Riot Client is open and logged into the account you want to use.
-3. Open EasyTS.
-4. Enter a resolution using the format `WIDTHxHEIGHT`, for example `1440x1080`.
-5. Optionally save the resolution as a preset.
-6. Click **Start — Auto-detect Account**.
-7. Wait for the success message in the log output.
-8. Set your Windows display resolution to the same resolution you entered in EasyTS.
-9. Launch VALORANT.
+Switch once you are in a match. Menus and agent select can glitch at a stretched resolution.
 
-EasyTS applies the config values automatically, but it does not change your Windows display resolution for you. Your Windows display resolution should match the resolution you applied.
+### Auto-restore
 
-### Read-only Config Lock
+When you switch resolution, EasyTS saves the resolution you were on. After VALORANT has been running and then closes, EasyTS puts that resolution back.
 
-EasyTS includes an optional **Read-only Config Lock** setting.
+- Auto-restore only works while EasyTS is open. You can leave it minimized.
+- If you close EasyTS while your display is still stretched, EasyTS warns you first.
+- If EasyTS was closed while stretched, reopen it and press **Restore original**.
+- You can turn auto-restore off in **Settings**. The **Restore original** button always works.
 
-When enabled, EasyTS marks `GameUserSettings.ini` as read-only after applying the stretched resolution. This can help stop VALORANT from changing Fill/Letterbox values back on launch.
-
-When disabled, EasyTS removes the read-only attribute while applying and leaves the config writable afterward.
-
-You can toggle this in **Settings → Read-only Config Lock**.
-
-### Using saved accounts
-
-After a successful apply, EasyTS saves the account automatically.
-
-Saved accounts appear in the account switcher where you can:
-
-- Re-apply True Stretch with the current resolution in one click
-- Restore the latest backup
-- View the last applied timestamp and backup date
+If your display is already at the resolution you pick, EasyTS does nothing.
 
 ### Presets
 
-Type a resolution and click **+ Save current** to save it as a preset chip.
-
-Click a preset chip to instantly fill the resolution input.
+Type a resolution and click **+ Save current** to save it as a preset. Click a preset to switch to it instantly. Click the **x** on a preset to delete it.
 
 ---
 
-## What EasyTS changes automatically
+## Monitor driver
 
-| Setting | Value |
-|---|---|
-| `ResolutionSizeX / Y` | Custom resolution |
-| `LastConfirmedResolutionSizeX / Y` | Custom resolution |
-| `LastUserConfirmedResolutionSizeX / Y` | Custom resolution |
-| `FullscreenMode` | `2` (Windowed) |
-| `LastConfirmedFullscreenMode` | `2` |
-| `PreferredFullscreenMode` | `2` |
-| `bShouldLetterbox` | `False` |
-| `bLastConfirmedShouldLetterbox` | `False` |
+The **Monitor driver** card turns the Windows monitor device(s) off and on. With the driver off, Windows no longer reports your monitor's native resolution to VALORANT, which lets a stretched resolution work.
 
-If `GameUserSettings.ini` is marked as read-only, EasyTS removes the read-only attribute automatically before applying changes.
+- Turn it off **before you launch VALORANT**.
+- It needs administrator permission. Your screen may flicker briefly.
+- EasyTS does not turn it back on automatically. Turn it back on from the same card whenever you want your normal display behavior back.
+- On some laptops, brightness controls stop working while it is off.
 
-After applying, EasyTS either leaves the config writable or locks it as read-only depending on your **Read-only Config Lock** setting.
+If something goes wrong and you cannot reach EasyTS, re-enable your monitor manually:
 
----
-
-## Backup system
-
-EasyTS automatically creates a backup before modifying any VALORANT configuration file.
-
-Backups are stored in:
-
-```text
-%localappdata%\EasyTS\Backups\
-```
-
-Each saved account keeps:
-
-- The latest backup
-- The backup creation timestamp
-- One-click restore support directly inside the UI
+1. Right-click the Start button and open **Device Manager**.
+2. Expand **Monitors**.
+3. Right-click the disabled monitor and choose **Enable device**.
 
 ---
 
 ## Safety and transparency
 
-EasyTS only reads and writes VALORANT's local configuration files.
+EasyTS does not touch VALORANT. It does not read or write VALORANT's files, inject into the game, or read its memory.
+
+EasyTS only does three things:
+
+- Changes your Windows display resolution
+- Turns Windows monitor devices off and on through standard Windows functionality
+- Checks whether the VALORANT process is running, so it can restore your resolution when you finish
 
 EasyTS does not:
 
 - Inject into VALORANT
 - Modify game files
 - Interact with Riot servers
-- Run during gameplay
 - Bypass Vanguard
 - Change account data
+
+EasyTS may be open while you play, since it needs to be running to restore your resolution afterwards.
 
 Because EasyTS is unsigned independent software, Windows Defender or SmartScreen may show a warning. This is common for unsigned applications.
 
@@ -190,72 +177,90 @@ The source code is publicly viewable on GitHub for transparency.
 
 ---
 
+## Coming from an older version?
+
+Versions before v4.0.0 edited VALORANT's `GameUserSettings.ini`. v4.0.0 no longer does, and does not undo what older versions changed. Older versions also stored their data in `%localappdata%\EasyTS\`, and those files stay there untouched.
+
+If you want to undo the old changes, with VALORANT closed:
+
+1. Go to `%localappdata%\VALORANT\Saved\Config\` and open your account's folder, then `WindowsClient`.
+2. If you used the **Read-only Config Lock**, right-click `GameUserSettings.ini`, open **Properties**, and untick **Read-only**.
+3. Either delete `GameUserSettings.ini` (VALORANT recreates it, which resets your graphics settings), or replace it with a backup from `%localappdata%\EasyTS\Backups\`.
+
+Your saved presets carry over. The old saved accounts and backups are no longer used, and you can delete them if you want.
+
+---
+
 ## FAQ
-
-### Why does EasyTS require Riot Client?
-
-VALORANT stores configuration files separately for every Riot account. EasyTS uses Riot Client to detect the currently active account automatically.
-
----
-
-### Can I get banned?
-
-EasyTS only edits local configuration values. It does not inject into the game, modify game files, or interact with Riot services during gameplay.
-
-Use at your own discretion.
-
----
-
-### Why should VALORANT be closed?
-
-VALORANT should be completely closed while EasyTS applies changes. This prevents the game from overwriting the config file or keeping settings locked while the tool is trying to edit them.
-
-EasyTS checks if VALORANT is running and warns you before applying changes.
-
----
-
-### Do I need to change my Windows display resolution?
-
-Yes. Set your Windows display resolution to the same stretched resolution you entered in EasyTS before launching VALORANT.
-
-For example, if you apply `1440x1080` in EasyTS, set Windows to `1440x1080` too.
-
-The custom resolution should also be supported by your GPU/monitor.
-
----
-
-### What does Read-only Config Lock do?
-
-When enabled, EasyTS marks `GameUserSettings.ini` as read-only after applying your stretched resolution. This can help stop VALORANT from changing Fill/Letterbox settings back on launch.
-
-When disabled, EasyTS removes read-only while applying and leaves the config writable afterward.
-
----
 
 ### Why is True Stretch not working?
 
 Check the following:
 
-- VALORANT was closed before applying changes
-- Riot Client was open and logged into the correct account
-- Your Windows display resolution matches the resolution you applied in EasyTS
-- Your custom resolution exists and is supported by your monitor/GPU
-- Your GPU scaling settings allow stretching
-- Your in-game display mode/fill behavior is not overriding the config
-- If needed, set VALORANT to **Fullscreen** with **Fill** checked, close the game, then run EasyTS again
-- If VALORANT keeps switching Fill back to Letterbox, try enabling **Read-only Config Lock** in Settings
+- The resolution is registered as a custom resolution in your GPU driver
+- GPU scaling is set to **Full-screen**
+- The monitor driver is **Off**, and you turned it off before launching VALORANT. If you turned it off after launching, restart VALORANT.
+- VALORANT is set to **Windowed Fullscreen** with **Fill**
+- You switched resolution after the match loaded
+- If black bars appear, see the black bars question below
 
-EasyTS attempts to configure the required settings automatically, but some systems may override them on launch.
+---
+
+### EasyTS says Windows rejected my resolution.
+
+That almost always means the resolution is not registered as a custom resolution in your GPU driver yet. Windows can only switch to resolutions the driver already knows. Add it in NVIDIA Control Panel, AMD Software, or Intel Graphics Software, then try again.
+
+---
+
+### Do I have to keep EasyTS open?
+
+Only if you want your resolution restored automatically. Switching resolution works fine and stays applied if you close EasyTS afterwards, but you would then restore it yourself, either by reopening EasyTS and pressing **Restore original** or through Windows display settings.
+
+---
+
+### My monitor seems stuck disabled. How do I fix it?
+
+Open EasyTS and press **Turn on** on the **Monitor driver** card. If EasyTS will not open, use the Device Manager steps in the **Monitor driver** section.
+
+---
+
+### My screen went black or looks wrong.
+
+Wait a few seconds first. If it does not recover, press `Win + Ctrl + Shift + B` to reset the graphics driver, or change the resolution back in Windows display settings. EasyTS asks Windows for a live resolution change rather than saving it as your permanent display setting. Restarting your PC is the last resort.
 
 ---
 
 ### Black bars still appear. What should I do?
 
-Some laptops and display setups may still show black bars because of GPU or display scaling behavior.
-
-EasyTS includes a black bars fix option for some laptop users through registry scaling. This may not work on every system.
+Some laptops and display setups show black bars because of GPU or display scaling behavior. EasyTS shows a **Fix Black Bars** card on systems where it applies. It changes the display scaling to Full Panel in the Windows Registry, needs administrator permission, and needs a restart afterwards. It may not work on every system.
 
 You may also need to check your NVIDIA Control Panel, AMD Software, Intel Graphics Command Center, or monitor scaling settings.
+
+---
+
+### Why does EasyTS ask for administrator permission?
+
+Only for the monitor driver switch and the black bars fix, because Windows requires administrator rights to change those. Switching resolution does not need it.
+
+---
+
+### Windows moved my desktop icons and windows.
+
+That can happen whenever the display resolution changes, and EasyTS changes it. Restoring your original resolution usually brings things back close to where they were.
+
+---
+
+### Does it work with more than one monitor?
+
+EasyTS changes the resolution of your primary display. The monitor driver switch applies to every monitor device Windows reports.
+
+---
+
+### Can I get banned?
+
+EasyTS does not touch the game. It does not read or write VALORANT's files, inject into it, or interact with Riot services. It changes your Windows display resolution, turns monitor devices off and on, and checks whether the VALORANT process is running.
+
+Use at your own discretion.
 
 ---
 
@@ -266,28 +271,20 @@ You may also need to check your NVIDIA Control Panel, AMD Software, Intel Graphi
 | `1440x1080` |
 | `1280x1024` |
 | `1600x1080` |
+| `1280x1080` |
+| `1280x960` |
 | `1154x1080` |
 | `1080x1080` |
+
+Each one has to be registered as a custom resolution in your GPU driver before EasyTS can switch to it.
 
 ---
 
 ### How do I uninstall EasyTS?
 
-Delete the executable.
-
-To completely undo changes:
-
-1. Use the built-in **Restore** button in the saved accounts section.
-2. Or manually reset VALORANT video settings in-game.
-3. Or delete `GameUserSettings.ini`.
-
-VALORANT config location:
-
-```text
-%localappdata%\VALORANT\Saved\Config\
-```
-
-Deleting `GameUserSettings.ini` will reset VALORANT graphics settings.
+1. Press **Restore original** if your display is still stretched.
+2. Press **Turn on** on the **Monitor driver** card if you turned it off.
+3. Delete the executable.
 
 EasyTS local data is stored in:
 
@@ -295,7 +292,7 @@ EasyTS local data is stored in:
 %localappdata%\EasyTS\
 ```
 
-You can delete that folder if you also want to remove EasyTS presets, saved accounts, settings, and backups.
+You can delete that folder if you also want to remove your presets and settings.
 
 ---
 
@@ -308,6 +305,7 @@ xbzvx
 ```
 
 ---
+
 
 ## License
 

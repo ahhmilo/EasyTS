@@ -10,26 +10,25 @@
 
 import webview
 import os
-import json
-import stat
-import base64
-import urllib.request
-import urllib.error
-import ssl
 import re
+import json
 import time
-import shutil
+import base64
+import ctypes
 import winreg
+import threading
 import subprocess
 import tempfile
 import textwrap
 import webbrowser
+import urllib.request
 import tkinter as tk
-import threading
+from tkinter import messagebox
 from typing import Optional, Tuple
 
-CURRENT_VERSION = "v3.0.4"
+CURRENT_VERSION = "v4.0.0"
 GITHUB_URL      = "https://github.com/ahhmilo/EasyTS"
+HTML_URL        = "https://raw.githubusercontent.com/ahhmilo/EasyTS/refs/heads/main/index.html"
 
 WEBVIEW2_DOWNLOAD_URL = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
 WEBVIEW2_REGISTRY_KEYS = [
@@ -38,14 +37,153 @@ WEBVIEW2_REGISTRY_KEYS = [
     (winreg.HKEY_CURRENT_USER,  r"Software\Microsoft\EdgeUpdate\ClientState\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"),
 ]
 
-REGION_MAP = {
-    "NA": "na", "BR": "br", "EUN1": "eu", "EUW1": "eu",
-    "KR": "kr", "JP": "jp", "OCE": "oce", "AP": "ap", "LATAM": "latam",
+CREATE_NO_WINDOW      = 0x08000000
+ENUM_CURRENT_SETTINGS = 0xFFFFFFFF
+DM_PELSWIDTH          = 0x00080000
+DM_PELSHEIGHT         = 0x00100000
+SEE_MASK_NOCLOSEPROCESS = 0x00000040
+SW_HIDE               = 0
+ERROR_CANCELLED       = 1223
+MAX_ELEVATED_PARAMS   = 1900
+
+DISPLAY_CHANGE_MESSAGES = {
+    1:  "Windows needs a restart before it can apply {w}x{h}.",
+    -1: "The display driver could not switch to {w}x{h}.",
+    -2: "Windows rejected {w}x{h}. This usually means the resolution is not registered as a custom resolution in your GPU driver yet. Check the setup guide.",
+    -3: "Windows could not save the display settings for {w}x{h}.",
+    -4: "Windows rejected the display change request for {w}x{h}.",
+    -5: "Windows rejected the display change request for {w}x{h}.",
+    -6: "Windows could not apply {w}x{h} with the current multi-display setup.",
 }
 
+VALORANT_PROCESS        = "valorant-win64-shipping.exe"
+WATCH_INTERVAL          = 4
+WATCH_MISSES_REQUIRED   = 2
+MIN_DIMENSION           = 200
+MAX_DIMENSION           = 16384
 
-class ValorantConfigError(Exception):
+RESOLUTION_PATTERN = re.compile(r"^\s*(\d{3,5})\s*[x\u00d7,\s]\s*(\d{3,5})\s*$", re.IGNORECASE)
+
+DEFAULT_SETTINGS = {"auto_restore": True}
+
+DRIVER_STATUS_SCRIPT = (
+    "Get-PnpDevice -Class Monitor -PresentOnly -ErrorAction SilentlyContinue | "
+    "Select-Object InstanceId,FriendlyName,Status | ConvertTo-Json -Compress"
+)
+
+BLACK_BARS_SCRIPT = (
+    r"$b='HKLM:\SYSTEM\ControlSet001\Control\GraphicsDrivers\Configuration';$c=0;$f=0;"
+    r"try{$k=Get-ChildItem $b -ErrorAction Stop}catch{exit 2};"
+    r"foreach($i in $k){$p=Join-Path $i.PSPath '00\00';"
+    r"if($null -ne (Get-ItemProperty $p -Name Scaling -ErrorAction SilentlyContinue)){"
+    r"try{Set-ItemProperty $p -Name Scaling -Value 3 -Type DWord -ErrorAction Stop;$c++}catch{$f++}}};"
+    r"if($f -gt 0){exit 2};if($c -eq 0){exit 3};exit 0"
+)
+
+
+class DisplayError(Exception):
     pass
+
+
+class ElevationDenied(Exception):
+    pass
+
+
+class DEVMODE(ctypes.Structure):
+    _fields_ = [
+        ("dmDeviceName",         ctypes.c_uint16 * 32),
+        ("dmSpecVersion",        ctypes.c_uint16),
+        ("dmDriverVersion",      ctypes.c_uint16),
+        ("dmSize",               ctypes.c_uint16),
+        ("dmDriverExtra",        ctypes.c_uint16),
+        ("dmFields",             ctypes.c_uint32),
+        ("dmPositionX",          ctypes.c_int32),
+        ("dmPositionY",          ctypes.c_int32),
+        ("dmDisplayOrientation", ctypes.c_uint32),
+        ("dmDisplayFixedOutput", ctypes.c_uint32),
+        ("dmColor",              ctypes.c_int16),
+        ("dmDuplex",             ctypes.c_int16),
+        ("dmYResolution",        ctypes.c_int16),
+        ("dmTTOption",           ctypes.c_int16),
+        ("dmCollate",            ctypes.c_int16),
+        ("dmFormName",           ctypes.c_uint16 * 32),
+        ("dmLogPixels",          ctypes.c_uint16),
+        ("dmBitsPerPel",         ctypes.c_uint32),
+        ("dmPelsWidth",          ctypes.c_uint32),
+        ("dmPelsHeight",         ctypes.c_uint32),
+        ("dmDisplayFlags",       ctypes.c_uint32),
+        ("dmDisplayFrequency",   ctypes.c_uint32),
+        ("dmICMMethod",          ctypes.c_uint32),
+        ("dmICMIntent",          ctypes.c_uint32),
+        ("dmMediaType",          ctypes.c_uint32),
+        ("dmDitherType",         ctypes.c_uint32),
+        ("dmReserved1",          ctypes.c_uint32),
+        ("dmReserved2",          ctypes.c_uint32),
+        ("dmPanningWidth",       ctypes.c_uint32),
+        ("dmPanningHeight",      ctypes.c_uint32),
+    ]
+
+
+class SHELLEXECUTEINFOW(ctypes.Structure):
+    _fields_ = [
+        ("cbSize",         ctypes.c_uint32),
+        ("fMask",          ctypes.c_uint32),
+        ("hwnd",           ctypes.c_void_p),
+        ("lpVerb",         ctypes.c_wchar_p),
+        ("lpFile",         ctypes.c_wchar_p),
+        ("lpParameters",   ctypes.c_wchar_p),
+        ("lpDirectory",    ctypes.c_wchar_p),
+        ("nShow",          ctypes.c_int),
+        ("hInstApp",       ctypes.c_void_p),
+        ("lpIDList",       ctypes.c_void_p),
+        ("lpClass",        ctypes.c_wchar_p),
+        ("hkeyClass",      ctypes.c_void_p),
+        ("dwHotKey",       ctypes.c_uint32),
+        ("hIconOrMonitor", ctypes.c_void_p),
+        ("hProcess",       ctypes.c_void_p),
+    ]
+
+
+_user32_cache = None
+
+def _user32():
+    global _user32_cache
+    if _user32_cache is None:
+        lib = ctypes.WinDLL("user32", use_last_error=True)
+        lib.EnumDisplaySettingsW.argtypes = [ctypes.c_wchar_p, ctypes.c_uint32, ctypes.POINTER(DEVMODE)]
+        lib.EnumDisplaySettingsW.restype  = ctypes.c_int
+        lib.ChangeDisplaySettingsW.argtypes = [ctypes.POINTER(DEVMODE), ctypes.c_uint32]
+        lib.ChangeDisplaySettingsW.restype  = ctypes.c_int32
+        _user32_cache = lib
+    return _user32_cache
+
+def get_display_resolution() -> Tuple[int, int]:
+    dm = DEVMODE()
+    dm.dmSize = ctypes.sizeof(DEVMODE)
+    if not _user32().EnumDisplaySettingsW(None, ENUM_CURRENT_SETTINGS, ctypes.byref(dm)):
+        raise DisplayError("Could not read the current display resolution.")
+    return int(dm.dmPelsWidth), int(dm.dmPelsHeight)
+
+def change_display_resolution(width: int, height: int) -> None:
+    dm = DEVMODE()
+    dm.dmSize = ctypes.sizeof(DEVMODE)
+    _user32().EnumDisplaySettingsW(None, ENUM_CURRENT_SETTINGS, ctypes.byref(dm))
+    dm.dmPelsWidth  = width
+    dm.dmPelsHeight = height
+    dm.dmFields     = DM_PELSWIDTH | DM_PELSHEIGHT
+    code = _user32().ChangeDisplaySettingsW(ctypes.byref(dm), 0)
+    if code != 0:
+        template = DISPLAY_CHANGE_MESSAGES.get(code, "Windows could not apply {w}x{h} (code {c}).")
+        raise DisplayError(template.format(w=width, h=height, c=code))
+
+def parse_resolution(text) -> Tuple[int, int]:
+    match = RESOLUTION_PATTERN.match(str(text))
+    if not match:
+        raise ValueError("Invalid format. Use WIDTHxHEIGHT, for example 1440x1080.")
+    width, height = int(match.group(1)), int(match.group(2))
+    if not (MIN_DIMENSION <= width <= MAX_DIMENSION and MIN_DIMENSION <= height <= MAX_DIMENSION):
+        raise ValueError("That resolution is outside the supported range.")
+    return width, height
 
 
 def log_to_ui(window, message: str, msg_type: str = "info"):
@@ -57,300 +195,160 @@ def get_easysts_dir() -> str:
     os.makedirs(path, exist_ok=True)
     return path
 
-def get_accounts_path() -> str:
-    return os.path.join(get_easysts_dir(), "accounts.json")
+def read_json_file(name: str, fallback):
+    path = os.path.join(get_easysts_dir(), name)
+    if not os.path.isfile(path):
+        return fallback
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return fallback
 
-def get_presets_path() -> str:
-    return os.path.join(get_easysts_dir(), "presets.json")
-
-def get_settings_path() -> str:
-    return os.path.join(get_easysts_dir(), "settings.json")
+def write_json_file(name: str, data) -> None:
+    with open(os.path.join(get_easysts_dir(), name), "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 def load_settings() -> dict:
-    defaults = {"lock_config_read_only": False}
-    path = get_settings_path()
-    if not os.path.isfile(path):
-        return defaults
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if not isinstance(data, dict):
-            return defaults
-        merged = defaults.copy()
-        merged.update(data)
-        return merged
-    except Exception:
-        return defaults
+    data = read_json_file("settings.json", {})
+    settings = DEFAULT_SETTINGS.copy()
+    if isinstance(data, dict):
+        for key in DEFAULT_SETTINGS:
+            if key in data:
+                settings[key] = bool(data[key])
+    return settings
 
 def save_settings(settings: dict) -> None:
-    with open(get_settings_path(), "w", encoding="utf-8") as f:
-        json.dump(settings, f, indent=2, ensure_ascii=False)
-
-def is_read_only_lock_enabled() -> bool:
-    return bool(load_settings().get("lock_config_read_only", False))
-
-def set_read_only_lock_enabled(enabled: bool) -> None:
-    settings = load_settings()
-    settings["lock_config_read_only"] = bool(enabled)
-    save_settings(settings)
-
-
-def load_accounts() -> list:
-    path = get_accounts_path()
-    if not os.path.isfile(path):
-        return []
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
-
-def save_accounts(accounts: list) -> None:
-    with open(get_accounts_path(), "w", encoding="utf-8") as f:
-        json.dump(accounts, f, indent=2, ensure_ascii=False)
-
-def upsert_account(name_tag: str, folder: str) -> None:
-    accounts = load_accounts()
-    now = time.strftime("%Y-%m-%d %H:%M")
-    for acc in accounts:
-        if acc["folder"] == folder:
-            acc["name_tag"] = name_tag
-            acc["last_applied"] = now
-            break
-    else:
-        accounts.append({"name_tag": name_tag, "folder": folder, "last_applied": now})
-    save_accounts(accounts)
+    write_json_file("settings.json", settings)
 
 def load_presets() -> list:
-    path = get_presets_path()
-    if not os.path.isfile(path):
+    data = read_json_file("presets.json", [])
+    if not isinstance(data, list):
         return []
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return [p for p in data if isinstance(p, dict) and "name" in p and "resolution" in p]
 
 def save_presets(presets: list) -> None:
-    with open(get_presets_path(), "w", encoding="utf-8") as f:
-        json.dump(presets, f, indent=2, ensure_ascii=False)
+    write_json_file("presets.json", presets)
 
-def get_backup_path(folder: str, create_dir: bool = True) -> str:
-    backup_dir = os.path.join(get_easysts_dir(), "Backups", folder)
-    if create_dir:
-        os.makedirs(backup_dir, exist_ok=True)
-    return os.path.join(backup_dir, "GameUserSettings.ini.bak")
+def load_display_state() -> dict:
+    data = read_json_file("display_state.json", {})
+    if not isinstance(data, dict):
+        return {}
+    original = data.get("original")
+    if not (isinstance(original, list) and len(original) == 2 and all(isinstance(v, int) for v in original)):
+        return {}
+    return data
 
-def backup_config(config_file: str, folder: str) -> None:
-    backup_path = get_backup_path(folder, create_dir=True)
-    shutil.copy2(config_file, backup_path)
-    make_file_writable(backup_path)
+def save_display_state(state: dict) -> None:
+    write_json_file("display_state.json", state)
 
-def make_file_writable(path: str) -> None:
-    file_mode = os.stat(path).st_mode
-    if not (file_mode & stat.S_IWRITE):
-        os.chmod(path, file_mode | stat.S_IWRITE)
-
-def make_file_read_only(path: str) -> None:
-    file_mode = os.stat(path).st_mode
-    if file_mode & stat.S_IWRITE:
-        os.chmod(path, file_mode & ~stat.S_IWRITE)
-
-def get_backup_date(folder: str) -> Optional[str]:
-    path = get_backup_path(folder, create_dir=False)
-    if not os.path.isfile(path):
-        return None
-    return time.strftime("%Y-%m-%d %H:%M", time.localtime(os.path.getmtime(path)))
+def clear_display_state() -> None:
+    path = os.path.join(get_easysts_dir(), "display_state.json")
+    if os.path.isfile(path):
+        os.remove(path)
 
 
 def is_valorant_running() -> bool:
     try:
         result = subprocess.run(
-            ["tasklist", "/FI", "IMAGENAME eq VALORANT-Win64-Shipping.exe", "/NH"],
-            capture_output=True, text=True
+            ["tasklist", "/NH", "/FO", "CSV"],
+            capture_output=True, text=True, errors="replace",
+            creationflags=CREATE_NO_WINDOW
         )
-        return "VALORANT-Win64-Shipping.exe" in result.stdout
+        return VALORANT_PROCESS in result.stdout.lower()
     except Exception:
         return False
 
-def get_valorant_config_path() -> str:
-    localappdata = os.environ.get("LOCALAPPDATA")
-    if not localappdata:
-        raise ValorantConfigError("LOCALAPPDATA not found.")
-    valorant_root = os.path.join(localappdata, "VALORANT")
-    saved_config  = os.path.join(valorant_root, "Saved", "Config")
-    if not os.path.isdir(valorant_root):
-        raise ValorantConfigError("VALORANT user directory not found.")
-    if not os.path.isdir(saved_config):
-        raise ValorantConfigError(r"VALORANT Saved\Config directory not found.")
-    return saved_config
 
-def get_config_file_for_folder(saved_config_dir: str, folder: str) -> Optional[str]:
-    for platform_folder in ("WindowsClient", "Windows"):
-        config_file = os.path.join(saved_config_dir, folder, platform_folder, "GameUserSettings.ini")
-        if os.path.isfile(config_file):
-            return config_file
-    return None
-
-def sort_config_matches(matches: list, preferred_folder: Optional[str] = None) -> list:
-    preferred = preferred_folder.lower() if preferred_folder else None
-
-    def sort_key(item):
-        folder, config_file = item
-        preferred_rank = 0 if preferred and folder.lower() == preferred else 1
-        try:
-            mtime = os.path.getmtime(config_file)
-        except OSError:
-            mtime = 0
-        return (preferred_rank, -mtime, folder.lower())
-
-    return sorted(matches, key=sort_key)
-
-def get_config_files_for_puuid(saved_config_dir: str, puuid: str, preferred_folder: Optional[str] = None) -> list:
-    prefix = f"{puuid.lower()}-"
-    matches = []
-    try:
-        for name in os.listdir(saved_config_dir):
-            folder_path = os.path.join(saved_config_dir, name)
-            if os.path.isdir(folder_path) and name.lower().startswith(prefix):
-                config_file = get_config_file_for_folder(saved_config_dir, name)
-                if config_file:
-                    matches.append((name, config_file))
-    except OSError:
-        pass
-    return sort_config_matches(matches, preferred_folder)
-
-def resolve_account_configs(saved_config_dir: str, puuid: str, region_folder: str) -> list:
-    expected_folder = f"{puuid}-{region_folder}"
-    matches = get_config_files_for_puuid(saved_config_dir, puuid, expected_folder)
-    if matches:
-        return matches
-
-    raise ValorantConfigError(
-        "GameUserSettings.ini was not found for this Riot account. "
-        "EasyTS detected the account, but could not find any VALORANT config folder matching the account ID. "
-        "Please launch VALORANT once on this account, change any video setting, close the game, and try again."
+def run_powershell(script: str, timeout: int = 30) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+         "-Command", "[Console]::OutputEncoding=[Text.Encoding]::UTF8;" + script],
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        timeout=timeout, creationflags=CREATE_NO_WINDOW
     )
 
-def resolve_saved_configs(saved_config_dir: str, folder: str) -> list:
-    if "-" in folder:
-        puuid = folder.rsplit("-", 1)[0]
-        matches = get_config_files_for_puuid(saved_config_dir, puuid, folder)
-        if matches:
-            return matches
+def build_elevated_params(script: str) -> str:
+    encoded = base64.b64encode(script.encode("utf-16-le")).decode("ascii")
+    params = f"-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -EncodedCommand {encoded}"
+    if len(params) > MAX_ELEVATED_PARAMS:
+        raise ValueError("The elevated script is too long.")
+    return params
 
-    config_file = get_config_file_for_folder(saved_config_dir, folder)
-    if config_file:
-        return [(folder, config_file)]
+def run_elevated_powershell(script: str, timeout_ms: int = 120000) -> int:
+    params = build_elevated_params(script)
 
-    raise ValorantConfigError(
-        "Config file not found for this account. "
-        "Please launch VALORANT at least once with this account."
-    )
+    shell32  = ctypes.WinDLL("shell32", use_last_error=True)
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    shell32.ShellExecuteExW.argtypes = [ctypes.POINTER(SHELLEXECUTEINFOW)]
+    shell32.ShellExecuteExW.restype  = ctypes.c_int
+    kernel32.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+    kernel32.WaitForSingleObject.restype  = ctypes.c_uint32
+    kernel32.GetExitCodeProcess.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint32)]
+    kernel32.GetExitCodeProcess.restype  = ctypes.c_int
+    kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
+    kernel32.CloseHandle.restype  = ctypes.c_int
 
-def find_riot_lockfile() -> Optional[str]:
-    localappdata = os.environ.get("LOCALAPPDATA")
-    if not localappdata:
-        return None
-    path = os.path.join(localappdata, "Riot Games", "Riot Client", "Config", "lockfile")
-    return path if os.path.isfile(path) else None
+    info = SHELLEXECUTEINFOW()
+    info.cbSize       = ctypes.sizeof(SHELLEXECUTEINFOW)
+    info.fMask        = SEE_MASK_NOCLOSEPROCESS
+    info.lpVerb       = "runas"
+    info.lpFile       = "powershell.exe"
+    info.lpParameters = params
+    info.nShow        = SW_HIDE
 
-def read_riot_lockfile(lockfile_path: str) -> Tuple[str, str, int, str, str]:
-    with open(lockfile_path, "r", encoding="utf-8") as f:
-        parts = f.read().strip().split(":")
-    if len(parts) != 5:
-        raise ValueError("Invalid lockfile format.")
-    name, pid, port, password, protocol = parts
-    return name, pid, int(port), password, protocol
+    if not shell32.ShellExecuteExW(ctypes.byref(info)):
+        if ctypes.get_last_error() == ERROR_CANCELLED:
+            raise ElevationDenied()
+        raise OSError("Could not start the elevated process.")
+    if not info.hProcess:
+        raise OSError("The elevated process did not return a handle.")
 
-def riot_request(port: int, auth_token: str, endpoint: str):
-    url = f"https://127.0.0.1:{port}{endpoint}"
-    req = urllib.request.Request(url)
-    req.add_header("Authorization", f"Basic {auth_token}")
-    ssl_ctx = ssl.create_default_context()
-    ssl_ctx.check_hostname = False
-    ssl_ctx.verify_mode = ssl.CERT_NONE
     try:
-        return urllib.request.urlopen(req, context=ssl_ctx, timeout=5)
-    except (urllib.error.URLError, ConnectionRefusedError, TimeoutError, OSError):
-        raise ValorantConfigError(
-            "Riot Client is not open or not responding. Please open Riot Client, "
-            "log into the account you want to use, keep VALORANT closed, and try again."
-        )
+        if kernel32.WaitForSingleObject(info.hProcess, timeout_ms) != 0:
+            raise TimeoutError("The elevated process took too long to finish.")
+        code = ctypes.c_uint32()
+        kernel32.GetExitCodeProcess(info.hProcess, ctypes.byref(code))
+        return int(code.value)
+    finally:
+        kernel32.CloseHandle(info.hProcess)
 
-def get_riot_account_info(port: int, auth_token: str) -> Tuple[str, str, str]:
-    response  = riot_request(port, auth_token, "/rso-auth/v1/authorization/userinfo")
-    data      = json.loads(response.read().decode())
-    user_info = json.loads(data.get("userInfo"))
 
-    puuid    = user_info.get("sub")
-    acct     = user_info.get("acct", {})
-    name_tag = f"{acct.get('game_name', 'Unknown')}#{acct.get('tag_line', 'Unknown')}"
+def list_monitor_devices() -> list:
+    try:
+        result = run_powershell(DRIVER_STATUS_SCRIPT)
+        raw = result.stdout.strip()
+        if not raw:
+            return []
+        data = json.loads(raw)
+    except Exception:
+        return []
+    if isinstance(data, dict):
+        data = [data]
+    devices = []
+    for item in data if isinstance(data, list) else []:
+        if isinstance(item, dict) and item.get("InstanceId"):
+            devices.append({
+                "instance_id": item["InstanceId"],
+                "name":        item.get("FriendlyName") or "Monitor",
+                "status":      str(item.get("Status") or ""),
+            })
+    return devices
 
-    region_info = user_info.get("region", {})
-    region_raw  = (region_info.get("id") if region_info else None) \
-                  or user_info.get("affinity", {}).get("pp")
-    if not region_raw:
-        raise ValorantConfigError("Could not determine account region.")
+def get_driver_status() -> str:
+    devices = list_monitor_devices()
+    if not devices:
+        return "not_found"
+    return "enabled" if any(d["status"].upper() == "OK" for d in devices) else "disabled"
 
-    region_folder = REGION_MAP.get(region_raw.upper(), region_raw.lower())
-    return puuid, region_folder, name_tag
-
-def modify_game_user_settings(config_file: str, width: int, height: int) -> None:
-    make_file_writable(config_file)
-
-    with open(config_file, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-
-    lines = [l for l in lines if not l.startswith("FullscreenMode=")]
-
-    pass1    = []
-    inserted = False
-    for line in lines:
-        pass1.append(line)
-        if "HDRDisplayOutputNits=" in line:
-            pass1.append("FullscreenMode=2\n")
-            inserted = True
-
-    if not inserted:
-        raise ValorantConfigError(
-            "HDRDisplayOutputNits not found in config. The file may be outdated or corrupted."
-        )
-
-    all_text = "".join(pass1)
-    if "bShouldLetterbox=" not in all_text or "bLastConfirmedShouldLetterbox=" not in all_text:
-        raise ValorantConfigError(
-            "bShouldLetterbox / bLastConfirmedShouldLetterbox not found in config. "
-            "The file may be outdated or corrupted."
-        )
-
-    final = []
-    for line in pass1:
-        if line.startswith("ResolutionSizeX="):
-            final.append(f"ResolutionSizeX={width}\n")
-        elif line.startswith("ResolutionSizeY="):
-            final.append(f"ResolutionSizeY={height}\n")
-        elif line.startswith("LastConfirmedResolutionSizeX="):
-            final.append(f"LastConfirmedResolutionSizeX={width}\n")
-        elif line.startswith("LastConfirmedResolutionSizeY="):
-            final.append(f"LastConfirmedResolutionSizeY={height}\n")
-        elif line.startswith("LastUserConfirmedResolutionSizeX="):
-            final.append(f"LastUserConfirmedResolutionSizeX={width}\n")
-        elif line.startswith("LastUserConfirmedResolutionSizeY="):
-            final.append(f"LastUserConfirmedResolutionSizeY={height}\n")
-        elif line.startswith("LastConfirmedFullscreenMode="):
-            final.append("LastConfirmedFullscreenMode=2\n")
-        elif line.startswith("PreferredFullscreenMode="):
-            final.append("PreferredFullscreenMode=2\n")
-        elif line.startswith("bShouldLetterbox="):
-            final.append("bShouldLetterbox=False\n")
-        elif line.startswith("bLastConfirmedShouldLetterbox="):
-            final.append("bLastConfirmedShouldLetterbox=False\n")
-        else:
-            final.append(line)
-
-    with open(config_file, "w", encoding="utf-8") as f:
-        f.writelines(final)
+def build_driver_script(enable: bool) -> str:
+    cmdlet = "Enable-PnpDevice" if enable else "Disable-PnpDevice"
+    return (
+        "$d=@(Get-PnpDevice -Class Monitor -PresentOnly -ErrorAction SilentlyContinue);"
+        "if($d.Count -eq 0){exit 3};$f=0;"
+        f"foreach($m in $d){{try{{{cmdlet} -InstanceId $m.InstanceId -Confirm:$false -ErrorAction Stop}}catch{{$f++}}}};"
+        "if($f -eq $d.Count){exit 2};exit 0"
+    )
 
 
 
@@ -480,18 +478,144 @@ def ensure_webview2() -> None:
         prompt_webview2()
 
 
+
+def black_bars_needed() -> bool:
+    try:
+        base_key = winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE,
+            r"SYSTEM\ControlSet001\Control\GraphicsDrivers\Configuration"
+        )
+        found_any = False
+        needs_fix = False
+        i = 0
+        while True:
+            try:
+                config_name = winreg.EnumKey(base_key, i)
+                try:
+                    sub_key = winreg.OpenKey(base_key, config_name + r"\00\00")
+                    try:
+                        val, _ = winreg.QueryValueEx(sub_key, "Scaling")
+                        found_any = True
+                        if val != 3:
+                            needs_fix = True
+                    except FileNotFoundError:
+                        pass
+                    winreg.CloseKey(sub_key)
+                except OSError:
+                    pass
+                i += 1
+            except OSError:
+                break
+        winreg.CloseKey(base_key)
+        return found_any and needs_fix
+    except Exception:
+        return False
+
+
 def download_html(url: str) -> str:
-    with urllib.request.urlopen(url) as response:
+    with urllib.request.urlopen(url, timeout=15) as response:
         return response.read().decode("utf-8")
 
 
+def show_fatal_error(message: str) -> None:
+    root = tk.Tk()
+    root.withdraw()
+    root.attributes("-topmost", True)
+    messagebox.showerror("EasyTS", message, parent=root)
+    root.destroy()
+
+
 class Api:
-    def __init__(self, window_ref=None):
-        self._window = window_ref
+    def __init__(self):
+        self._window  = None
+        self._lock    = threading.RLock()
+        self._stop    = threading.Event()
+        self._watcher = None
+        self._seen    = False
+
+    def _log(self, message: str, msg_type: str = "info") -> None:
+        if self._window:
+            try:
+                log_to_ui(self._window, message, msg_type)
+            except Exception:
+                pass
+
+    def _notify(self) -> None:
+        if self._window:
+            try:
+                self._window.evaluate_js("window.refreshDisplay && window.refreshDisplay();")
+            except Exception:
+                pass
+
+    def _watching(self) -> bool:
+        return self._watcher is not None and self._watcher.is_alive() and not self._stop.is_set()
+
+    def _start_watcher(self) -> None:
+        if self._watching():
+            return
+        stop = threading.Event()
+        self._stop    = stop
+        self._seen    = False
+        self._watcher = threading.Thread(target=self._watch_loop, args=(stop,), daemon=True)
+        self._watcher.start()
+
+    def _stop_watcher(self) -> None:
+        self._stop.set()
+        self._watcher = None
+
+    def _watch_loop(self, stop: threading.Event) -> None:
+        misses = 0
+        while not stop.wait(WATCH_INTERVAL):
+            if is_valorant_running():
+                self._seen = True
+                misses = 0
+                continue
+            if not self._seen:
+                continue
+            misses += 1
+            if misses < WATCH_MISSES_REQUIRED:
+                continue
+            if stop.is_set():
+                return
+            self._log("VALORANT closed. Restoring your display resolution...", "info")
+            self.restore_display()
+            return
+
+    def _snapshot(self) -> dict:
+        current = get_display_resolution()
+        state   = load_display_state()
+        original = state.get("original")
+        if original and tuple(original) == current:
+            clear_display_state()
+            self._stop_watcher()
+            original = None
+        return {
+            "current":       list(current),
+            "original":      original,
+            "watching":      self._watching(),
+            "valorant_seen": self._seen,
+            "auto_restore":  load_settings()["auto_restore"],
+        }
 
     def close(self):
-        if self._window:
-            self._window.destroy()
+        if not self._window:
+            return
+        try:
+            snap = self._snapshot()
+        except Exception:
+            snap = {}
+        if snap.get("original") and snap.get("watching"):
+            cw, ch = snap["current"]
+            ow, oh = snap["original"]
+            message = (
+                f"Your display is still {cw}x{ch}. EasyTS restores {ow}x{oh} automatically when VALORANT "
+                "closes, but only while EasyTS is open.\n\nClose EasyTS anyway? You will need to restore "
+                "your resolution yourself."
+            )
+            if not self._window.create_confirmation_dialog("EasyTS", message):
+                return
+        self._stop_watcher()
+        self._window.destroy()
 
     def minimize(self):
         if self._window:
@@ -503,369 +627,219 @@ class Api:
     def get_version(self) -> str:
         return CURRENT_VERSION
 
-    def get_accounts(self) -> list:
-        accounts = load_accounts()
-        for acc in accounts:
-            acc["backup_date"] = get_backup_date(acc["folder"])
-        return accounts
+    def open_data_folder(self) -> None:
+        subprocess.Popen(["explorer", get_easysts_dir()])
 
-    def clear_accounts(self) -> dict:
+    def get_display_state(self) -> dict:
         try:
-            save_accounts([])
-            return {"success": True}
+            return self._snapshot()
+        except Exception as e:
+            return {"error": str(e)}
+
+    def apply_resolution(self, resolution_str: str) -> dict:
+        try:
+            width, height = parse_resolution(resolution_str)
+        except ValueError as e:
+            self._log(str(e), "error")
+            return {"success": False, "message": str(e)}
+
+        with self._lock:
+            try:
+                current = get_display_resolution()
+                if current == (width, height):
+                    self._log(f"Display is already {width}x{height}. Nothing to change.", "muted")
+                    self._notify()
+                    return {"success": True, "changed": False}
+
+                state = load_display_state()
+                newly_saved = not state.get("original")
+                if newly_saved:
+                    state = {"original": list(current)}
+                state["applied"] = [width, height]
+                state["at"]      = time.strftime("%Y-%m-%d %H:%M")
+                save_display_state(state)
+
+                try:
+                    change_display_resolution(width, height)
+                except DisplayError:
+                    if newly_saved:
+                        clear_display_state()
+                    raise
+
+                ow, oh = state["original"]
+                if (ow, oh) == (width, height):
+                    clear_display_state()
+                    self._stop_watcher()
+                    self._log(f"Display restored to {width}x{height}.", "success")
+                else:
+                    self._log(f"Display set to {width}x{height}. Original resolution {ow}x{oh} saved.", "success")
+                    if load_settings()["auto_restore"]:
+                        self._start_watcher()
+                        self._log("Auto-restore is on. Keep EasyTS open and it will restore your resolution when VALORANT closes.", "info")
+            except DisplayError as e:
+                self._log(str(e), "error")
+                return {"success": False, "message": str(e)}
+            except Exception as e:
+                self._log(f"Error: {e}", "error")
+                return {"success": False, "message": str(e)}
+
+        self._notify()
+        return {"success": True, "changed": True}
+
+    def restore_display(self) -> dict:
+        with self._lock:
+            try:
+                original = load_display_state().get("original")
+                if not original:
+                    self._stop_watcher()
+                    self._log("There is no saved resolution to restore.", "muted")
+                    self._notify()
+                    return {"success": True, "changed": False}
+
+                ow, oh = original
+                if get_display_resolution() != (ow, oh):
+                    change_display_resolution(ow, oh)
+                    self._log(f"Display restored to {ow}x{oh}.", "success")
+                else:
+                    self._log("Display is already at its original resolution.", "muted")
+                clear_display_state()
+                self._stop_watcher()
+            except DisplayError as e:
+                self._log(str(e), "error")
+                self._notify()
+                return {"success": False, "message": str(e)}
+            except Exception as e:
+                self._log(f"Error: {e}", "error")
+                self._notify()
+                return {"success": False, "message": str(e)}
+
+        self._notify()
+        return {"success": True, "changed": True}
+
+    def dismiss_saved_display(self) -> dict:
+        with self._lock:
+            clear_display_state()
+            self._stop_watcher()
+        self._log("Saved original resolution dismissed.", "muted")
+        self._notify()
+        return {"success": True}
+
+    def get_driver_status(self) -> str:
+        return get_driver_status()
+
+    def set_driver_enabled(self, enabled: bool) -> dict:
+        enable = bool(enabled)
+        label  = "on" if enable else "off"
+        self._log(f"Turning the monitor driver {label}. Accept the UAC prompt to continue...", "info")
+        try:
+            code = run_elevated_powershell(build_driver_script(enable))
+        except ElevationDenied:
+            self._log("UAC prompt was denied. Administrator permission is required for this step.", "error")
+            return {"success": False, "denied": True, "status": get_driver_status()}
+        except Exception as e:
+            self._log(f"Error: {e}", "error")
+            return {"success": False, "status": get_driver_status()}
+
+        status = get_driver_status()
+        if status == "not_found":
+            self._log("No monitor device was found. This step is not needed on this system.", "muted")
+            return {"success": True, "status": status}
+
+        expected = "enabled" if enable else "disabled"
+        if status != expected and code == 0:
+            time.sleep(1.5)
+            status = get_driver_status()
+
+        if status == expected:
+            if enable:
+                self._log("Monitor driver is on again.", "success")
+            else:
+                self._log("Monitor driver is off. Launch VALORANT now so it picks up the change.", "success")
+            return {"success": True, "status": status}
+
+        self._log(f"Could not turn the monitor driver {label}.", "error")
+        return {"success": False, "status": status}
+
+    def get_settings(self) -> dict:
+        return load_settings()
+
+    def set_auto_restore(self, enabled: bool) -> dict:
+        enable   = bool(enabled)
+        settings = load_settings()
+        settings["auto_restore"] = enable
+        try:
+            save_settings(settings)
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    def open_backup_folder(self) -> None:
-        folder = os.path.join(get_easysts_dir(), "Backups")
-        os.makedirs(folder, exist_ok=True)
-        subprocess.Popen(["explorer", folder])
-
-    def get_read_only_lock_enabled(self) -> bool:
-        return is_read_only_lock_enabled()
-
-    def set_read_only_lock_enabled(self, enabled: bool) -> dict:
-        try:
-            set_read_only_lock_enabled(bool(enabled))
-            return {"success": True, "enabled": is_read_only_lock_enabled()}
-        except Exception as e:
-            return {"success": False, "message": str(e)}
-
+        with self._lock:
+            if not enable:
+                self._stop_watcher()
+            elif load_display_state().get("original"):
+                self._start_watcher()
+        self._notify()
+        return {"success": True, "enabled": enable}
 
     def get_presets(self) -> list:
         return load_presets()
 
     def save_preset(self, name: str, resolution: str) -> dict:
+        try:
+            width, height = parse_resolution(resolution)
+        except ValueError as e:
+            return {"success": False, "message": str(e)}
+        value   = f"{width}x{height}"
         presets = load_presets()
         for p in presets:
-            if p["name"] == name:
-                p["resolution"] = resolution
+            if p["name"] == value:
+                p["resolution"] = value
                 save_presets(presets)
                 return {"success": True}
-        presets.append({"name": name, "resolution": resolution})
+        presets.append({"name": value, "resolution": value})
         save_presets(presets)
         return {"success": True}
 
     def delete_preset(self, name: str) -> dict:
-        presets = [p for p in load_presets() if p["name"] != name]
-        save_presets(presets)
+        save_presets([p for p in load_presets() if p["name"] != name])
         return {"success": True}
 
-    def _check_valorant_not_running(self) -> bool:
-        if is_valorant_running():
-            log_to_ui(self._window,
-                      "VALORANT is currently running. Please close it before applying.", "error")
-            return False
-        return True
-
-    def apply_stretched(self, resolution_str: str) -> dict:
-        match = re.match(r"^(\d{3,4})x(\d{3,4})$", resolution_str.strip().lower())
-        if not match:
-            return {"success": False}
-
-        if not self._check_valorant_not_running():
-            return {"success": False}
-
-        width  = int(match.group(1))
-        height = int(match.group(2))
-
-        try:
-            log_to_ui(self._window, "Initializing...", "info")
-            saved_config_dir = get_valorant_config_path()
-            log_to_ui(self._window, "VALORANT config directory found.", "info")
-
-            lockfile_path = None
-            for attempt in range(3):
-                lockfile_path = find_riot_lockfile()
-                if lockfile_path:
-                    break
-                if attempt < 2:
-                    retry = self._window.create_confirmation_dialog(
-                        "Riot Client Not Found",
-                        "Riot Client lockfile not found.\n\n"
-                        "Please open Riot Client as a visible window, then click OK to retry."
-                    )
-                    if not retry:
-                        log_to_ui(self._window, "Cancelled by user.", "muted")
-                        return {"success": False}
-                    time.sleep(2)
-                else:
-                    raise ValorantConfigError(
-                        "Riot Client lockfile not found after 3 attempts. "
-                        "Make sure Riot Client is open and visible."
-                    )
-
-            log_to_ui(self._window, "Lockfile found.", "info")
-            name, pid, port, password, protocol = read_riot_lockfile(lockfile_path)
-            auth_token = base64.b64encode(f"riot:{password}".encode()).decode()
-            log_to_ui(self._window, f"Connected to Riot Client on port {port}.", "info")
-
-            log_to_ui(self._window, "Fetching VALORANT account...", "info")
-            puuid, region_folder, name_tag = get_riot_account_info(port, auth_token)
-            expected_folder = f"{puuid}-{region_folder}"
-            config_targets = resolve_account_configs(saved_config_dir, puuid, region_folder)
-            account_folder = config_targets[0][0]
-
-            if account_folder != expected_folder:
-                log_to_ui(
-                    self._window,
-                    f"Region folder mismatch detected. Riot reported {expected_folder}, using {account_folder}.",
-                    "info"
-                )
-
-            if len(config_targets) > 1:
-                log_to_ui(
-                    self._window,
-                    f"Found {len(config_targets)} config folders for this account. Applying to all of them.",
-                    "info"
-                )
-
-            log_to_ui(self._window, f"Account: {name_tag} - {account_folder}", "success")
-            log_to_ui(self._window, "Backing up config...", "info")
-
-            for target_folder, config_file in config_targets:
-                backup_config(config_file, target_folder)
-
-            log_to_ui(self._window, f"Applying {width}x{height} + fill mode...", "info")
-
-            for target_folder, config_file in config_targets:
-                modify_game_user_settings(config_file, width, height)
-                if is_read_only_lock_enabled():
-                    make_file_read_only(config_file)
-                else:
-                    make_file_writable(config_file)
-
-            if is_read_only_lock_enabled():
-                log_to_ui(self._window, "Read-only lock enabled. Config locked after applying.", "info")
-            else:
-                log_to_ui(self._window, "Read-only lock disabled. Config left writable after applying.", "info")
-
-            upsert_account(name_tag, account_folder)
-            log_to_ui(self._window,
-                      f"Done! {width}x{height} applied for {name_tag}. You can now launch VALORANT.",
-                      "success")
-            self._window.evaluate_js("window.refreshAccounts();")
-            return {"success": True}
-
-        except Exception as e:
-            log_to_ui(self._window, f"Error: {e}", "error")
-            return {"success": False}
-
-
-    def apply_to_saved(self, folder: str, resolution_str: str) -> dict:
-        match = re.match(r"^(\d{3,4})x(\d{3,4})$", resolution_str.strip().lower())
-        if not match:
-            log_to_ui(self._window, "Invalid resolution format.", "error")
-            return {"success": False}
-
-        if not self._check_valorant_not_running():
-            return {"success": False}
-
-        width  = int(match.group(1))
-        height = int(match.group(2))
-
-        try:
-            saved_config_dir = get_valorant_config_path()
-            config_targets = resolve_saved_configs(saved_config_dir, folder)
-            resolved_folder = config_targets[0][0]
-
-            name_tag = next((a["name_tag"] for a in load_accounts() if a["folder"] == folder), folder)
-            if resolved_folder != folder:
-                log_to_ui(self._window, f"Saved folder moved from {folder} to {resolved_folder}.", "info")
-                folder = resolved_folder
-
-            if len(config_targets) > 1:
-                log_to_ui(
-                    self._window,
-                    f"Found {len(config_targets)} config folders for this account. Applying to all of them.",
-                    "info"
-                )
-
-            log_to_ui(self._window, f"Account: {name_tag} - {folder}", "success")
-            log_to_ui(self._window, "Backing up config...", "info")
-
-            for target_folder, config_file in config_targets:
-                backup_config(config_file, target_folder)
-
-            log_to_ui(self._window, f"Applying {width}x{height} + fill mode...", "info")
-
-            for target_folder, config_file in config_targets:
-                modify_game_user_settings(config_file, width, height)
-                if is_read_only_lock_enabled():
-                    make_file_read_only(config_file)
-                else:
-                    make_file_writable(config_file)
-
-            if is_read_only_lock_enabled():
-                log_to_ui(self._window, "Read-only lock enabled. Config locked after applying.", "info")
-            else:
-                log_to_ui(self._window, "Read-only lock disabled. Config left writable after applying.", "info")
-
-            upsert_account(name_tag, folder)
-            log_to_ui(self._window,
-                      f"Done! {width}x{height} applied for {name_tag}. You can now launch VALORANT.",
-                      "success")
-            self._window.evaluate_js("window.refreshAccounts();")
-            return {"success": True}
-
-        except Exception as e:
-            log_to_ui(self._window, f"Error: {e}", "error")
-            return {"success": False}
-
-
     def check_black_bars_needed(self) -> bool:
-        try:
-            base_key = winreg.OpenKey(
-                winreg.HKEY_LOCAL_MACHINE,
-                r"SYSTEM\ControlSet001\Control\GraphicsDrivers\Configuration"
-            )
-            found_any = False
-            needs_fix = False
-            i = 0
-            while True:
-                try:
-                    config_name = winreg.EnumKey(base_key, i)
-                    try:
-                        sub_key = winreg.OpenKey(base_key, config_name + r"\00\00")
-                        try:
-                            val, _ = winreg.QueryValueEx(sub_key, "Scaling")
-                            found_any = True
-                            if val != 3:
-                                needs_fix = True
-                        except FileNotFoundError:
-                            pass
-                        winreg.CloseKey(sub_key)
-                    except OSError:
-                        pass
-                    i += 1
-                except OSError:
-                    break
-            winreg.CloseKey(base_key)
-            return found_any and needs_fix
-        except Exception:
-            return False
+        return black_bars_needed()
 
     def fix_black_bars(self) -> dict:
-        ps_script = r"""
-$regBase = "HKLM:\SYSTEM\ControlSet001\Control\GraphicsDrivers\Configuration"
-$changed = 0
-$failed  = 0
-
-Write-Host ""
-Write-Host "  EasyTS - Fix Black Bars" -ForegroundColor Red
-Write-Host "  ========================" -ForegroundColor DarkGray
-Write-Host ""
-Write-Host "  Setting display scaling to Full Panel for all configurations..." -ForegroundColor Gray
-Write-Host ""
-
-try {
-    $configs = Get-ChildItem -Path $regBase -ErrorAction Stop
-} catch {
-    Write-Host "  ERROR: Could not open registry path." -ForegroundColor Red
-    Write-Host "  $($_.Exception.Message)"
-    Write-Host ""
-    Read-Host "  Press ENTER to exit"
-    exit 1
-}
-
-foreach ($config in $configs) {
-    $sub00 = Join-Path $config.PSPath "00"
-    if (-not (Test-Path $sub00)) { continue }
-    $sub0000 = Join-Path $sub00 "00"
-    if (-not (Test-Path $sub0000)) { continue }
-
-    $scalingPath = $sub0000
-    $val = Get-ItemProperty -Path $scalingPath -Name "Scaling" -ErrorAction SilentlyContinue
-    if ($null -eq $val) { continue }
-
-    try {
-        Set-ItemProperty -Path $scalingPath -Name "Scaling" -Value 3 -Type DWord -ErrorAction Stop
-        Write-Host "  [OK] $($config.PSChildName)" -ForegroundColor Green
-        $changed++
-    } catch {
-        Write-Host "  [FAIL] $($config.PSChildName): $($_.Exception.Message)" -ForegroundColor Red
-        $failed++
-    }
-}
-
-Write-Host ""
-if ($changed -eq 0 -and $failed -eq 0) {
-    Write-Host "  No Scaling registry keys found on this system." -ForegroundColor Yellow
-    Write-Host "  This fix may not apply to your GPU or driver." -ForegroundColor Yellow
-} else {
-    Write-Host "  Done. $changed key(s) updated, $failed failed." -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "  Please RESTART your PC for changes to take effect." -ForegroundColor Yellow
-}
-
-Write-Host ""
-Read-Host "  Press ENTER to close"
-"""
+        self._log("Applying the black bars fix. Accept the UAC prompt to continue...", "info")
         try:
-            ps_file = tempfile.mktemp(suffix=".ps1", prefix="EasyTS_blackbars_")
-            with open(ps_file, "w", encoding="utf-8") as f:
-                f.write(ps_script)
-
-            ps_cmd = (
-                "Start-Process powershell -ArgumentList "
-                "'-ExecutionPolicy Bypass -File \"" + ps_file + "\"' "
-                "-Verb RunAs -Wait"
-            )
-
-            def _launch():
-                result = subprocess.run(["powershell.exe", "-Command", ps_cmd])
-                if result.returncode != 0:
-                    log_to_ui(self._window,
-                              "UAC prompt was denied. Administrator permissions are required to apply this fix.",
-                              "error")
-
-            threading.Thread(target=_launch, daemon=True).start()
-            log_to_ui(self._window,
-                      "Black bars fix launched — accept the UAC prompt to continue.", "info")
-            return {"success": True}
+            code = run_elevated_powershell(BLACK_BARS_SCRIPT)
+        except ElevationDenied:
+            self._log("UAC prompt was denied. Administrator permission is required for this fix.", "error")
+            return {"success": False, "denied": True}
         except Exception as e:
-            log_to_ui(self._window, f"Error launching fix: {e}", "error")
+            self._log(f"Error: {e}", "error")
             return {"success": False}
 
-
-    def restore_account(self, folder: str) -> dict:
-        try:
-            saved_config_dir = get_valorant_config_path()
-            config_targets = resolve_saved_configs(saved_config_dir, folder)
-
-            restored = 0
-            for target_folder, config_file in config_targets:
-                bak_path = get_backup_path(target_folder, create_dir=False)
-                if not os.path.isfile(bak_path):
-                    continue
-                make_file_writable(config_file)
-                shutil.copy2(bak_path, config_file)
-                make_file_writable(config_file)
-                restored += 1
-
-            if restored == 0:
-                log_to_ui(self._window, "No backup found for this account.", "error")
-                return {"success": False}
-
-            name_tag = next((a["name_tag"] for a in load_accounts() if a["folder"] == folder), folder)
-            log_to_ui(self._window, f"Backup restored for {name_tag} across {restored} config folder(s).", "success")
+        if code == 0:
+            self._log("Black bars fix applied. Restart your PC for it to take effect.", "success")
             return {"success": True}
-
-        except Exception as e:
-            log_to_ui(self._window, f"Error: {e}", "error")
-            return {"success": False}
-
-
+        if code == 3:
+            self._log("No display scaling entries were found. This fix does not apply to this system.", "muted")
+            return {"success": True}
+        self._log("The fix could not be applied to every display entry.", "error")
+        return {"success": False}
 
 
 def main():
     ensure_webview2()
 
-    html_content = download_html(
-        "https://raw.githubusercontent.com/ahhmilo/EasyTS/refs/heads/main/index.html"
-    )
+    try:
+        html_content = download_html(HTML_URL)
+    except Exception:
+        show_fatal_error(
+            "EasyTS could not load its interface.\n\n"
+            "Check your internet connection and try again."
+        )
+        return
 
-    api    = Api.__new__(Api)
+    api    = Api()
     window = webview.create_window(
         title     = "EasyTS",
         html      = html_content,

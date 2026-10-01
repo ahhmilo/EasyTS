@@ -34,6 +34,8 @@
       --text:        #e8e8e8;
       --muted:       #7a7a7a;
       --muted2:      #484848;
+      --ok:          #4ade80;
+      --warn:        #ffaa00;
       --close-hover: #ff4655;
     }
 
@@ -51,7 +53,7 @@
       height: 46px; padding: 0 12px 0 18px;
       background: var(--header);
       border-bottom: 1px solid var(--border);
-      flex-shrink: 0; position: relative; z-index: 20;
+      flex-shrink: 0; position: relative; z-index: 60;
     }
     #header-left { display: flex; align-items: center; gap: 9px; }
     #logo-dot {
@@ -80,6 +82,7 @@
     #btn-close:hover        { background: var(--close-hover); border-color: var(--close-hover); color: #fff; }
     #btn-settings.active    { background: var(--surface2); color: var(--text); border-color: var(--border2); }
     .window-btn svg         { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+    body.legacy #btn-settings { display: none; }
 
     .page {
       display: none; flex-direction: column; align-items: center;
@@ -91,7 +94,7 @@
     .page::-webkit-scrollbar-track { background: transparent; }
     .page::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-    #page-main { padding: 24px 40px 20px; gap: 0; }
+    #page-main { padding: 24px 40px 24px; gap: 0; }
     #page-settings { padding: 24px 40px 28px; gap: 0; }
 
     #title-block { text-align: center; margin-bottom: 18px; flex-shrink: 0; }
@@ -107,7 +110,7 @@
       font-family: 'JetBrains Mono', monospace;
       font-size: 10px; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--muted2);
-      margin: 16px 0 8px; flex-shrink: 0;
+      margin: 18px 0 8px; flex-shrink: 0;
     }
     .section-label::before {
       content: ''; display: inline-block;
@@ -117,7 +120,7 @@
 
     #update-banner {
       display: none; width: 100%; max-width: 560px;
-      margin-bottom: 10px; flex-shrink: 0;
+      margin-top: 14px; flex-shrink: 0;
       align-items: center; justify-content: space-between; gap: 10px;
       padding: 9px 14px;
       background: rgba(255,170,0,0.07);
@@ -128,13 +131,13 @@
     #update-banner.visible { display: flex; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
     #update-banner-left { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #ccc; min-width: 0; }
-    #update-banner-left::before { content:'↑'; font-size:13px; font-weight:700; color:#ffaa00; flex-shrink:0; }
-    #update-banner-left span { color:#ffaa00; font-weight:600; }
+    #update-banner-left::before { content:'↑'; font-size:13px; font-weight:700; color:var(--warn); flex-shrink:0; }
+    #update-banner-left span { color:var(--warn); font-weight:600; }
     #update-banner-right { display:flex; align-items:center; gap:6px; flex-shrink:0; }
     #btn-update-download {
       height:26px; padding:0 12px; border-radius:6px;
       border:1px solid rgba(255,170,0,0.4); background:transparent;
-      color:#ffaa00; font-family:'Outfit',sans-serif;
+      color:var(--warn); font-family:'Outfit',sans-serif;
       font-size:11px; font-weight:600; cursor:pointer;
       transition:background 0.15s;
     }
@@ -148,15 +151,55 @@
     }
     #btn-update-dismiss:hover { background:var(--surface2); color:var(--text); }
 
-
-    .input-wrapper {
+    #display-card {
       width: 100%; max-width: 560px;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      margin-top: 16px; padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      flex-shrink: 0;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    #display-card.stretched { border-color: rgba(255,70,85,0.35); background: linear-gradient(180deg, rgba(255,70,85,0.05), var(--surface)); }
+    .mini-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted2);
+    }
+    #display-current {
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px; font-weight: 500; letter-spacing: -0.01em;
+    }
+    #display-card.stretched #display-current { color: var(--accent); }
+    #display-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 0; }
+    #display-note { font-size: 11px; color: var(--muted); text-align: right; line-height: 1.5; }
+    #display-note b { color: var(--text); font-weight: 500; }
+    #display-actions { display: none; gap: 6px; }
+    #display-card.stretched #display-actions { display: flex; }
+    .small-btn {
+      height: 28px; padding: 0 12px; border-radius: 6px;
+      border: 1px solid var(--border2); background: transparent;
+      color: var(--text); font-family: 'Outfit', sans-serif;
+      font-size: 11.5px; font-weight: 500; cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .small-btn:hover { background: var(--surface2); }
+    .small-btn.primary { color: var(--accent); border-color: rgba(255,70,85,0.35); }
+    .small-btn.primary:hover { background: var(--accent-dim); border-color: var(--accent); }
+    .small-btn.icon { width: 28px; padding: 0; color: var(--muted2); }
+    .small-btn.icon:hover { color: var(--text); }
+
+    #apply-row { width: 100%; max-width: 560px; display: flex; gap: 8px; flex-shrink: 0; }
+    .input-wrapper {
+      flex: 1; min-width: 0;
       display: flex; align-items: center;
       height: 48px; background: var(--surface);
       border: 1px solid var(--border); border-radius: 10px;
       padding: 0 16px;
       transition: border-color 0.2s, box-shadow 0.2s;
-      flex-shrink: 0;
     }
     .input-wrapper:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
     .input-wrapper input {
@@ -166,25 +209,49 @@
       user-select: text; caret-color: var(--accent);
     }
     .input-wrapper input::placeholder { color: var(--muted2); }
+    #btn-apply {
+      height: 48px; padding: 0 26px; border-radius: 10px; border: none;
+      background: var(--accent); color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px; font-weight: 600; letter-spacing: 0.04em;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 24px var(--accent-glow);
+    }
+    #btn-apply:hover  { opacity: 0.88; box-shadow: 0 6px 32px var(--accent-glow); }
+    #btn-apply:active { transform: scale(0.985); }
 
+    .chip-grid { width: 100%; max-width: 560px; display: flex; flex-wrap: wrap; gap: 6px; flex-shrink: 0; }
+    #popular-list { display: grid; grid-template-columns: repeat(4, 1fr); }
+    #popular-list .res-chip { width: 100%; padding: 0 6px; }
+    .res-chip {
+      height: 30px; padding: 0 12px; border-radius: 7px;
+      border: 1px solid var(--border2); background: var(--surface);
+      color: var(--text); cursor: pointer;
+      font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .res-chip:hover  { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .res-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
-    #presets-wrap { width: 100%; max-width: 560px; flex-shrink: 0; }
-    #presets-list { display: flex; flex-wrap: wrap; gap: 6px; }
     .preset-chip {
-      display: flex; align-items: center; gap: 0;
-      height: 28px; border-radius: 6px;
+      display: flex; align-items: center;
+      height: 30px; border-radius: 7px;
       border: 1px solid var(--border2); background: var(--surface);
       overflow: hidden; flex-shrink: 0;
     }
+    .preset-chip.active { border-color: var(--accent); background: var(--accent-dim); }
     .preset-chip-label {
-      padding: 0 10px; font-size: 12px; font-weight: 500;
+      padding: 0 12px; height: 100%;
+      display: flex; align-items: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
       color: var(--text); cursor: pointer;
       transition: background 0.15s, color 0.15s;
-      height: 100%; display: flex; align-items: center;
     }
+    .preset-chip.active .preset-chip-label { color: var(--accent); }
     .preset-chip-label:hover { background: var(--accent-dim); color: var(--accent); }
     .preset-chip-del {
-      width: 24px; height: 100%;
+      width: 26px; height: 100%;
       display: flex; align-items: center; justify-content: center;
       font-size: 11px; color: var(--muted2); cursor: pointer;
       border-left: 1px solid var(--border2);
@@ -192,66 +259,92 @@
     }
     .preset-chip-del:hover { background: rgba(255,70,85,0.12); color: var(--accent); }
     #preset-save-btn {
-      height: 28px; padding: 0 12px; border-radius: 6px;
+      margin-left: auto;
+      height: 24px; padding: 0 10px; border-radius: 6px;
       border: 1px dashed var(--border2); background: transparent;
-      color: var(--muted2); font-family: 'Outfit', sans-serif;
-      font-size: 12px; cursor: pointer;
+      color: var(--muted); font-family: 'Outfit', sans-serif;
+      font-size: 11px; letter-spacing: 0; text-transform: none; cursor: pointer;
       transition: border-color 0.15s, color 0.15s;
     }
     #preset-save-btn:hover { border-color: var(--accent); color: var(--accent); }
     #presets-empty { font-size: 11px; color: var(--muted2); font-family: 'JetBrains Mono', monospace; }
 
-    #btn-start {
-      width: 100%; max-width: 560px; height: 46px;
-      margin-top: 10px; border-radius: 10px; border: none;
-      background: var(--accent); color: #fff;
-      font-family: 'Outfit', sans-serif;
-      font-size: 14px; font-weight: 600; letter-spacing: 0.04em;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: opacity 0.15s, transform 0.1s, box-shadow 0.2s;
-      box-shadow: 0 4px 24px var(--accent-glow); flex-shrink: 0;
+    body.busy .res-chip, body.busy .preset-chip, body.busy #btn-apply, body.busy #btn-restore {
+      opacity: 0.45; pointer-events: none;
     }
-    #btn-start:hover    { opacity: 0.88; box-shadow: 0 6px 32px var(--accent-glow); }
-    #btn-start:active   { transform: scale(0.985); }
-    #btn-start:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
-    #btn-start svg      { width: 12px; height: 12px; fill: #fff; }
 
-    #accounts-section { width: 100%; max-width: 560px; flex-shrink: 0; }
-    #accounts-list { display: flex; flex-direction: column; gap: 6px; }
-    .account-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 14px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; transition: border-color 0.15s;
+    .card {
+      width: 100%; max-width: 560px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      flex-shrink: 0;
+      margin-top: 12px;
     }
-    .account-row:hover { border-color: var(--border2); }
-    .account-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); opacity: 0.6; flex-shrink: 0; }
-    .account-info { flex: 1; min-width: 0; }
-    .account-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .account-meta { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--muted2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .account-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    .acc-btn {
-      height: 28px; padding: 0 12px; border-radius: 6px;
-      border: 1px solid var(--border2); background: transparent;
-      font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 500;
-      cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
-      white-space: nowrap;
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .card-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .card-title::before {
+      content: ''; display: inline-block;
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--muted2); flex-shrink: 0;
     }
-    .acc-btn-apply { color: var(--accent); border-color: rgba(255,70,85,0.3); }
-    .acc-btn-apply:hover { background: var(--accent-dim); border-color: var(--accent); }
-    .acc-btn-apply:disabled { opacity: 0.3; cursor: not-allowed; }
-    .acc-btn-restore { color: var(--muted); }
-    .acc-btn-restore:hover:not(:disabled) { background: var(--surface2); color: var(--text); border-color: var(--border2); }
-    .acc-btn-restore:disabled { opacity: 0.25; cursor: not-allowed; }
-    #accounts-empty {
-      width: 100%; padding: 14px; text-align: center;
+    .card.tone-warn .card-title::before { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+    .card.tone-ok   .card-title::before { background: var(--ok);   box-shadow: 0 0 6px var(--ok); }
+    .badge {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px; color: var(--muted2); letter-spacing: 0.08em;
-      background: var(--surface); border: 1px dashed var(--border); border-radius: 10px;
+      font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--warn); border: 1px solid rgba(255,170,0,0.35);
+      border-radius: 4px; padding: 2px 6px; flex-shrink: 0;
     }
+    .badge.ok    { color: var(--ok);    border-color: rgba(74,222,128,0.35); }
+    .badge.muted { color: var(--muted); border-color: var(--border2); }
+    .card-sub { margin-top: 10px; font-size: 11.5px; color: var(--muted); line-height: 1.6; }
+    .card-sub span { color: var(--warn); }
+    .card-btn {
+      width: 100%; height: 38px; margin-top: 12px;
+      border-radius: 8px; border: 1px solid rgba(255,170,0,0.35);
+      background: rgba(255,170,0,0.06); color: var(--warn);
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px; font-weight: 600; letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+    }
+    .card-btn:hover    { background: rgba(255,170,0,0.12); border-color: var(--warn); }
+    .card-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .card-btn.ok { border-color: rgba(74,222,128,0.35); background: rgba(74,222,128,0.06); color: var(--ok); }
+    .card-btn.ok:hover { background: rgba(74,222,128,0.12); border-color: var(--ok); }
+    .card-btn.neutral { border-color: var(--border2); background: transparent; color: var(--text); }
+    .card-btn.neutral:hover { background: var(--surface2); border-color: var(--border2); }
 
-    #log-wrap { width: 100%; max-width: 560px; margin-top: 14px; flex-shrink: 0; }
+    .collapse-toggle {
+      background: transparent; border: none; cursor: pointer;
+      color: var(--muted); padding: 2px 4px; border-radius: 4px;
+      display: flex; align-items: center; transition: color 0.15s;
+    }
+    .collapse-toggle:hover { color: var(--text); }
+    .collapse-toggle svg {
+      width: 12px; height: 12px;
+      stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+      fill: none; transition: transform 0.2s ease;
+    }
+    .card.collapsed .collapse-toggle svg { transform: rotate(-90deg); }
+    .collapse-body { overflow: hidden; transition: max-height 0.25s ease; max-height: 640px; }
+    .card.collapsed .collapse-body { max-height: 0; }
+    .card-head.clickable { cursor: pointer; }
+
+    .step { display: flex; gap: 12px; margin-top: 14px; }
+    .step-num {
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--accent-dim); color: var(--accent);
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+    }
+    .step-title { font-size: 12.5px; font-weight: 600; color: var(--text); }
+    .step-body  { margin-top: 3px; font-size: 11.5px; color: var(--muted); line-height: 1.6; }
+    .step-body b { color: var(--text); font-weight: 500; }
+
+    #log-wrap { width: 100%; max-width: 560px; margin-top: 6px; flex-shrink: 0; }
     #log-console {
       width: 100%; background: #0a0a0a;
       border: 1px solid var(--border); border-radius: 10px;
@@ -268,79 +361,6 @@
     .log-info    { color: #9cdcfe; }
     .log-muted   { color: var(--muted2); }
 
-    #blackbars-card {
-      width: 100%; max-width: 560px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 16px;
-      flex-shrink: 0;
-      margin-top: 10px;
-    }
-    #blackbars-header {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 10px; margin-bottom: 10px;
-    }
-    #blackbars-title {
-      font-size: 13px; font-weight: 600; color: var(--text);
-      display: flex; align-items: center; gap: 7px;
-    }
-    #blackbars-title::before {
-      content: '';
-      display: inline-block;
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: #ffaa00;
-      box-shadow: 0 0 6px #ffaa00;
-      flex-shrink: 0;
-    }
-    #blackbars-badge {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px; letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: #ffaa00;
-      border: 1px solid rgba(255,170,0,0.35);
-      border-radius: 4px;
-      padding: 2px 6px;
-      flex-shrink: 0;
-    }
-    #blackbars-notes {
-      font-size: 11px; color: var(--muted);
-      line-height: 1.6; margin-bottom: 12px;
-    }
-    #blackbars-notes span { color: #ffaa00; }
-    #btn-fix-blackbars {
-      width: 100%; height: 38px;
-      border-radius: 8px; border: 1px solid rgba(255,170,0,0.35);
-      background: rgba(255,170,0,0.06);
-      color: #ffaa00;
-      font-family: 'Outfit', sans-serif;
-      font-size: 13px; font-weight: 600; letter-spacing: 0.03em;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 7px;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    #btn-fix-blackbars:hover { background: rgba(255,170,0,0.12); border-color: #ffaa00; }
-    #btn-fix-blackbars:active { opacity: 0.8; }
-    #btn-fix-blackbars:disabled { opacity: 0.35; cursor: not-allowed; }
-
-    #blackbars-toggle {
-      background: transparent; border: none; cursor: pointer;
-      color: var(--muted); padding: 2px 4px; border-radius: 4px;
-      display: flex; align-items: center;
-      transition: color 0.15s;
-    }
-    #blackbars-toggle:hover { color: var(--text); }
-    #blackbars-toggle svg {
-      width: 12px; height: 12px;
-      stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
-      fill: none;
-      transition: transform 0.2s ease;
-    }
-    #blackbars-toggle.collapsed svg { transform: rotate(-90deg); }
-    #blackbars-body { overflow: hidden; transition: max-height 0.25s ease; max-height: 300px; }
-    #blackbars-body.collapsed { max-height: 0; }
-
     .settings-card {
       width: 100%; max-width: 560px;
       background: var(--surface);
@@ -350,21 +370,14 @@
       flex-shrink: 0;
       margin-bottom: 12px;
     }
-    .settings-card-title {
-      padding: 12px 16px 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px; letter-spacing: 0.12em;
-      text-transform: uppercase; color: var(--muted2);
-      border-bottom: 1px solid var(--border);
-    }
     .settings-row {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
     }
     .settings-row:last-child { border-bottom: none; }
     .settings-row-label { font-size: 13px; color: var(--text); }
-    .settings-row-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .settings-row-sub { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.5; }
     .settings-btn {
       height: 30px; padding: 0 14px; border-radius: 7px;
       border: 1px solid var(--border2); background: transparent;
@@ -374,15 +387,11 @@
       white-space: nowrap; flex-shrink: 0;
     }
     .settings-btn:hover { background: var(--surface2); border-color: var(--border2); }
-    .settings-btn-danger { color: #ff6b6b; border-color: rgba(255,107,107,0.3); }
-    .settings-btn-danger:hover { background: rgba(255,107,107,0.08); border-color: #ff6b6b; }
     .settings-btn-accent { color: var(--accent); border-color: rgba(255,70,85,0.3); }
     .settings-btn-accent:hover { background: var(--accent-dim); border-color: var(--accent); }
+    .settings-btn.on { color: var(--ok); border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.07); }
 
-    .about-creator {
-      display: flex; align-items: center; gap: 12px;
-      padding: 18px 16px;
-    }
+    .about-creator { display: flex; align-items: center; gap: 12px; padding: 18px 16px; }
     .about-avatar {
       width: 38px; height: 38px; border-radius: 50%;
       background: var(--accent-dim);
@@ -393,11 +402,31 @@
     .about-name { font-size: 14px; font-weight: 600; color: var(--text); }
     .about-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .about-actions { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; }
+    .settings-version { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted2); }
 
-    .settings-version {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px; color: var(--muted2);
+    #legacy-overlay {
+      display: none;
+      position: fixed; top: 46px; left: 0; right: 0; bottom: 0;
+      background: var(--bg); z-index: 50;
+      align-items: center; justify-content: center; padding: 32px;
     }
+    body.legacy #legacy-overlay { display: flex; }
+    #legacy-card {
+      width: 100%; max-width: 440px; text-align: center;
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: 14px; padding: 28px 26px;
+    }
+    #legacy-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    #legacy-text  { margin-top: 10px; font-size: 12.5px; color: var(--muted); line-height: 1.65; }
+    #btn-legacy-download {
+      margin-top: 20px; height: 44px; padding: 0 28px; border-radius: 10px; border: none;
+      background: var(--accent); color: #fff; cursor: pointer;
+      font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+      box-shadow: 0 4px 24px var(--accent-glow);
+      transition: opacity 0.15s;
+    }
+    #btn-legacy-download:hover { opacity: 0.88; }
+    #legacy-link { margin-top: 14px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--muted2); user-select: text; }
   </style>
 </head>
 <body>
@@ -443,38 +472,107 @@
       </div>
     </div>
 
+    <div id="display-card">
+      <div id="display-left">
+        <div class="mini-label">Current display</div>
+        <div id="display-current">—</div>
+      </div>
+      <div id="display-right">
+        <div id="display-note">Pick a resolution below to switch instantly.</div>
+        <div id="display-actions">
+          <button class="small-btn primary" id="btn-restore">Restore original</button>
+          <button class="small-btn icon" id="btn-dismiss" title="Forget the saved original resolution">✕</button>
+        </div>
+      </div>
+    </div>
 
     <div class="section-label">Resolution</div>
-    <div class="input-wrapper">
-      <input type="text" id="resolution-input" placeholder="e.g. 1440x1080" autocomplete="off" spellcheck="false"/>
-    </div>
-
-
-    <div id="presets-wrap">
-      <div class="section-label">
-        Presets
-        <button id="preset-save-btn" style="margin-left:auto;">+ Save current</button>
+    <div id="apply-row">
+      <div class="input-wrapper">
+        <input type="text" id="resolution-input" placeholder="e.g. 1440x1080" autocomplete="off" spellcheck="false"/>
       </div>
-      <div id="presets-list"><span id="presets-empty">No presets saved yet.</span></div>
+      <button id="btn-apply">Apply</button>
     </div>
 
-    <button id="btn-start">
-      <svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>
-      Start — Auto-detect Account
-    </button>
+    <div class="section-label">Popular</div>
+    <div class="chip-grid" id="popular-list"></div>
 
-    <div id="blackbars-card" style="display:none;">
-      <div id="blackbars-header" style="cursor:pointer;" onclick="toggleBlackBars()">
-        <div id="blackbars-title">Fix Black Bars</div>
+    <div class="section-label">
+      Presets
+      <button id="preset-save-btn">+ Save current</button>
+    </div>
+    <div class="chip-grid" id="presets-list"><span id="presets-empty">No presets saved yet.</span></div>
+
+    <div class="card" id="driver-card" data-status="checking">
+      <div class="card-head">
+        <div class="card-title">Monitor driver</div>
+        <div class="badge muted" id="driver-pill">Checking</div>
+      </div>
+      <div class="card-sub" id="driver-sub">Reading the current state.</div>
+      <button class="card-btn" id="btn-driver" disabled>Checking...</button>
+    </div>
+
+    <div class="card tone-warn collapsed" id="setup-card">
+      <div class="card-head clickable" id="setup-head">
+        <div class="card-title">Before you switch</div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-          <div id="blackbars-badge">Recommended for laptops</div>
-          <button id="blackbars-toggle" onclick="event.stopPropagation();toggleBlackBars()">
+          <div class="badge">Read first</div>
+          <button class="collapse-toggle" id="setup-toggle" title="Show or hide the setup guide">
             <svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg>
           </button>
         </div>
       </div>
-      <div id="blackbars-body">
-        <div id="blackbars-notes">
+      <div class="collapse-body">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div>
+            <div class="step-title">Register the resolution with your GPU</div>
+            <div class="step-body">Windows can only switch to resolutions your graphics driver already knows. Create each stretched resolution as a <b>custom resolution</b> in NVIDIA Control Panel, AMD Software, or Intel Graphics Software first.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div>
+            <div class="step-title">Set GPU scaling to Full-screen</div>
+            <div class="step-body">In the same control panel, set scaling to <b>Full-screen</b> so the image fills the monitor. Not Aspect ratio, not Centered.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div>
+            <div class="step-title">Turn the monitor driver off</div>
+            <div class="step-body">Use the card above <b>before you launch VALORANT</b>. It stops Windows from pinning your display to its native aspect ratio.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div>
+            <div class="step-title">Set VALORANT's display options</div>
+            <div class="step-body">Display Mode: <b>Windowed Fullscreen</b>. Aspect Ratio Method: <b>Fill</b>.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div>
+            <div class="step-title">Switch once you are in a match</div>
+            <div class="step-body">Apply your resolution after the match has loaded. Menus and agent select can glitch at a stretched resolution. Leave EasyTS open in the background and it restores your resolution when VALORANT closes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card tone-warn" id="blackbars-card" style="display:none;">
+      <div class="card-head clickable" id="blackbars-head">
+        <div class="card-title">Fix Black Bars</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <div class="badge">Recommended for laptops</div>
+          <button class="collapse-toggle" id="blackbars-toggle" title="Show or hide details">
+            <svg viewBox="0 0 12 12"><polyline points="2,4 6,8 10,4"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="collapse-body">
+        <div class="card-sub">
           Some systems display black bars on the sides when using a custom resolution.
           This fix sets the display scaling to <span>Full Panel</span> in the Windows Registry,
           forcing the screen to stretch the image correctly.<br><br>
@@ -483,14 +581,7 @@
           May not work on all systems. Best results on <span>Intel</span> and <span>AMD</span> integrated graphics.
           NVIDIA users should use <span>NVIDIA Control Panel → GPU Scaling → Full Screen</span> instead.
         </div>
-        <button id="btn-fix-blackbars">Fix Black Bars</button>
-      </div>
-    </div>
-
-    <div id="accounts-section">
-      <div class="section-label">Saved Accounts</div>
-      <div id="accounts-list">
-        <div id="accounts-empty">No saved accounts yet. Run Start to add one.</div>
+        <button class="card-btn" id="btn-fix-blackbars">Fix Black Bars</button>
       </div>
     </div>
 
@@ -502,7 +593,6 @@
     </div>
 
   </main>
-
 
   <div id="page-settings" class="page">
 
@@ -523,29 +613,27 @@
       </div>
     </div>
 
+    <div class="section-label">Behavior</div>
+
+    <div class="settings-card">
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Auto-restore resolution</div>
+          <div class="settings-row-sub">When you switch resolution, EasyTS saves your original one and restores it after VALORANT closes. Only works while EasyTS is open.</div>
+        </div>
+        <button class="settings-btn" id="btn-autorestore-toggle">Off</button>
+      </div>
+    </div>
+
     <div class="section-label">Data</div>
 
     <div class="settings-card">
       <div class="settings-row">
         <div>
-          <div class="settings-row-label">Open Backup Folder</div>
-          <div class="settings-row-sub">%localappdata%\EasyTS\Backups</div>
+          <div class="settings-row-label">Open Data Folder</div>
+          <div class="settings-row-sub">%localappdata%\EasyTS</div>
         </div>
-        <button class="settings-btn" id="btn-open-backups">Open</button>
-      </div>
-      <div class="settings-row">
-        <div>
-          <div class="settings-row-label">Read-only Config Lock</div>
-          <div class="settings-row-sub">Optional: lock GameUserSettings.ini after applying so VALORANT cannot overwrite Fill settings</div>
-        </div>
-        <button class="settings-btn" id="btn-readonly-toggle">Off</button>
-      </div>
-      <div class="settings-row">
-        <div>
-          <div class="settings-row-label">Clear Saved Accounts</div>
-          <div class="settings-row-sub">Removes all saved accounts from EasyTS. Does not affect your config files.</div>
-        </div>
-        <button class="settings-btn settings-btn-danger" id="btn-clear-accounts">Clear</button>
+        <button class="settings-btn" id="btn-open-data">Open</button>
       </div>
     </div>
 
@@ -569,24 +657,34 @@
 
   </div>
 
+  <div id="legacy-overlay">
+    <div id="legacy-card">
+      <div id="legacy-title">This version of EasyTS is outdated</div>
+      <div id="legacy-text">
+        EasyTS has been rebuilt around a new method. The config-file method used by this version
+        is no longer supported. Download the latest release to keep using EasyTS.
+      </div>
+      <button id="btn-legacy-download">Download the latest version</button>
+      <div id="legacy-link">github.com/ahhmilo/EasyTS/releases/latest</div>
+    </div>
+  </div>
+
   <script>
     const resInput   = document.getElementById('resolution-input');
-    const startBtn   = document.getElementById('btn-start');
     const logConsole = document.getElementById('log-console');
 
     const RELEASES_PAGE = "https://github.com/ahhmilo/EasyTS/releases/latest";
     const RELEASES_API  = "https://api.github.com/repos/ahhmilo/EasyTS/releases/latest";
     const GITHUB_PAGE   = "https://github.com/ahhmilo/EasyTS";
+    const MIN_SUPPORTED_VERSION = "v4.0.0";
+    const POPULAR = ["1440x1080", "1280x1024", "1600x1080", "1280x1080", "1280x960", "1154x1080", "1080x1080"];
+    const UPDATE_MSG = 'This feature requires a newer version of EasyTS. Please update.';
 
-    const settingsBtn = document.getElementById('btn-settings');
-    let settingsOpen  = false;
-
-    settingsBtn.addEventListener('click', () => {
-      settingsOpen = !settingsOpen;
-      document.getElementById('page-main').classList.toggle('active', !settingsOpen);
-      document.getElementById('page-settings').classList.toggle('active', settingsOpen);
-      settingsBtn.classList.toggle('active', settingsOpen);
-    });
+    let exeVersion   = null;
+    let busy         = false;
+    let displayState = null;
+    let presets      = [];
+    let autoRestore  = true;
 
     function addLog(message, type = 'info') {
       String(message).split('\n').forEach(line => {
@@ -600,11 +698,6 @@
     }
     window.appendLog = (message, type) => addLog(message, type);
 
-    function setRunning(running) {
-      startBtn.disabled = running;
-      document.querySelectorAll('.acc-btn').forEach(b => b.disabled = running);
-    }
-
     async function api(fn, fallbackMsg) {
       try {
         return await fn();
@@ -614,215 +707,278 @@
       }
     }
 
-    let exeVersion = null;
+    function versionAtLeast(current, required) {
+      if (!current) return false;
+      const c = String(current).replace(/^v/i, '').split('.').map(n => parseInt(n) || 0);
+      const r = String(required).replace(/^v/i, '').split('.').map(n => parseInt(n) || 0);
+      for (let i = 0; i < Math.max(c.length, r.length); i++) {
+        const cv = c[i] || 0, rv = r[i] || 0;
+        if (cv > rv) return true;
+        if (cv < rv) return false;
+      }
+      return true;
+    }
 
-    async function refreshPresets() {
-      const presets = await api(() => window.pywebview.api.get_presets());
+    function normalizeRes(text) {
+      const m = String(text).trim().match(/^(\d{3,5})\s*[x\u00d7,\s]\s*(\d{3,5})$/i);
+      return m ? `${parseInt(m[1], 10)}x${parseInt(m[2], 10)}` : null;
+    }
+
+    async function run(fn) {
+      if (busy) return null;
+      busy = true;
+      document.body.classList.add('busy');
+      try {
+        return await fn();
+      } finally {
+        busy = false;
+        document.body.classList.remove('busy');
+      }
+    }
+
+    const settingsBtn = document.getElementById('btn-settings');
+    let settingsOpen  = false;
+    settingsBtn.addEventListener('click', () => {
+      settingsOpen = !settingsOpen;
+      document.getElementById('page-main').classList.toggle('active', !settingsOpen);
+      document.getElementById('page-settings').classList.toggle('active', settingsOpen);
+      settingsBtn.classList.toggle('active', settingsOpen);
+    });
+
+    function currentKey() {
+      return displayState && displayState.current ? `${displayState.current[0]}x${displayState.current[1]}` : null;
+    }
+
+    function renderDisplay() {
+      const card    = document.getElementById('display-card');
+      const current = document.getElementById('display-current');
+      const note    = document.getElementById('display-note');
+      const s       = displayState;
+
+      if (!s || s.error) {
+        current.textContent = '—';
+        note.textContent = s && s.error ? s.error : 'Could not read the current display.';
+        card.classList.remove('stretched');
+        renderChips();
+        return;
+      }
+
+      current.textContent = `${s.current[0]} × ${s.current[1]}`;
+      const stretched = !!s.original;
+      card.classList.toggle('stretched', stretched);
+
+      if (stretched) {
+        let text = `Original <b>${s.original[0]} × ${s.original[1]}</b>`;
+        if (s.watching) text += '<br>Restores when VALORANT closes';
+        else if (!s.auto_restore) text += '<br>Auto-restore is off';
+        note.innerHTML = text;
+      } else {
+        note.textContent = 'Pick a resolution below to switch instantly.';
+      }
+      renderChips();
+    }
+
+    async function refreshDisplay() {
+      displayState = await api(() => window.pywebview.api.get_display_state());
+      renderDisplay();
+    }
+    window.refreshDisplay = refreshDisplay;
+
+    function renderChips() {
+      const active = currentKey();
+
+      const popular = document.getElementById('popular-list');
+      popular.innerHTML = '';
+      POPULAR.forEach(res => {
+        const chip = document.createElement('button');
+        chip.className = 'res-chip' + (res === active ? ' active' : '');
+        chip.textContent = res;
+        chip.addEventListener('click', () => applyResolution(res));
+        popular.appendChild(chip);
+      });
+
       const list = document.getElementById('presets-list');
-      const wrap = document.getElementById('presets-wrap');
-
-      if (presets === null) {
-        wrap.style.display = 'none';
-        return;
-      }
-
       list.innerHTML = '';
-      if (!presets || presets.length === 0) {
-        list.innerHTML = '<span id="presets-empty">No presets saved yet.</span>';
+      if (!presets.length) {
+        const empty = document.createElement('span');
+        empty.id = 'presets-empty';
+        empty.textContent = 'No presets saved yet.';
+        list.appendChild(empty);
         return;
       }
-
       presets.forEach(p => {
-        const chip = document.createElement('div');
-        chip.className = 'preset-chip';
-        chip.innerHTML = `
-          <div class="preset-chip-label" title="${p.resolution}">${p.name}</div>
-          <div class="preset-chip-del" title="Delete preset">✕</div>
-        `;
-        chip.querySelector('.preset-chip-label').addEventListener('click', () => {
-          resInput.value = p.resolution;
-        });
-        chip.querySelector('.preset-chip-del').addEventListener('click', async () => {
+        const chip  = document.createElement('div');
+        chip.className = 'preset-chip' + (p.resolution === active ? ' active' : '');
+        const label = document.createElement('div');
+        label.className = 'preset-chip-label';
+        label.textContent = p.name;
+        label.title = p.resolution;
+        label.addEventListener('click', () => applyResolution(p.resolution));
+        const del = document.createElement('div');
+        del.className = 'preset-chip-del';
+        del.textContent = '✕';
+        del.title = 'Delete preset';
+        del.addEventListener('click', async () => {
           await api(() => window.pywebview.api.delete_preset(p.name));
           refreshPresets();
         });
+        chip.appendChild(label);
+        chip.appendChild(del);
         list.appendChild(chip);
       });
     }
 
+    async function refreshPresets() {
+      const result = await api(() => window.pywebview.api.get_presets());
+      presets = Array.isArray(result) ? result : [];
+      renderChips();
+    }
+
+    async function applyResolution(text) {
+      const res = normalizeRes(text);
+      if (!res) {
+        addLog('Invalid format. Use WIDTHxHEIGHT, for example 1440x1080.', 'error');
+        return;
+      }
+      resInput.value = res;
+      await run(async () => {
+        await api(() => window.pywebview.api.apply_resolution(res), UPDATE_MSG);
+        await refreshDisplay();
+      });
+    }
+
+    document.getElementById('btn-apply').addEventListener('click', () => applyResolution(resInput.value));
+    resInput.addEventListener('keydown', e => { if (e.key === 'Enter') applyResolution(resInput.value); });
+
     document.getElementById('preset-save-btn').addEventListener('click', async () => {
-      const resolution = resInput.value.trim();
-      if (!resolution) { addLog('Enter a resolution first to save as preset.', 'error'); return; }
-      if (!/^\d{3,4}x\d{3,4}$/i.test(resolution)) { addLog('Invalid format. Use WIDTHxHEIGHT', 'error'); return; }
-      await api(
-        () => window.pywebview.api.save_preset(resolution, resolution),
-        'Presets require a newer version of EasyTS. Please update.'
-      );
+      const res = normalizeRes(resInput.value);
+      if (!res) { addLog('Enter a resolution first to save it as a preset.', 'error'); return; }
+      const result = await api(() => window.pywebview.api.save_preset(res, res), UPDATE_MSG);
+      if (result && result.success === false) addLog(result.message || 'Could not save preset.', 'error');
       refreshPresets();
     });
 
-    async function refreshAccounts() {
-      const accounts = await api(
-        () => window.pywebview.api.get_accounts(),
-        'Could not load accounts. Please update EasyTS.'
-      );
-      const list = document.getElementById('accounts-list');
-      list.innerHTML = '';
+    document.getElementById('btn-restore').addEventListener('click', () => run(async () => {
+      await api(() => window.pywebview.api.restore_display(), UPDATE_MSG);
+      await refreshDisplay();
+    }));
 
-      if (accounts === null || !accounts || accounts.length === 0) {
-        list.innerHTML = '<div id="accounts-empty">No saved accounts yet. Run Start to add one.</div>';
-        return;
+    document.getElementById('btn-dismiss').addEventListener('click', () => run(async () => {
+      await api(() => window.pywebview.api.dismiss_saved_display(), UPDATE_MSG);
+      await refreshDisplay();
+    }));
+
+    const DRIVER_COPY = {
+      checking: {
+        pill: 'Checking', tone: 'muted', card: '', btn: 'Checking...', btnClass: 'neutral', disabled: true,
+        sub: 'Reading the current state.'
+      },
+      enabled: {
+        pill: 'On', tone: '', card: 'tone-warn', btn: 'Turn off', btnClass: '', disabled: false,
+        sub: 'While this is on, Windows tells VALORANT your monitor\'s native aspect ratio, which limits stretched resolutions. Turn it off <b>before you launch VALORANT</b>. Needs administrator permission and your screen may flicker.'
+      },
+      disabled: {
+        pill: 'Off', tone: 'ok', card: 'tone-ok', btn: 'Turn on', btnClass: 'ok', disabled: false,
+        sub: 'Ready. Stretched resolutions can apply. Turn it back on if you want your normal display behavior back. On some laptops, brightness controls stop working while it is off.'
+      },
+      not_found: {
+        pill: 'N/A', tone: 'muted', card: '', btn: 'Check again', btnClass: 'neutral', disabled: false,
+        sub: 'No monitor device was found, so this step is not needed on this system.'
       }
+    };
 
-      accounts.forEach(acc => {
-        const row = document.createElement('div');
-        row.className = 'account-row';
-        const hasBackup = !!acc.backup_date;
-        const meta = `Last applied: ${acc.last_applied || '—'}${hasBackup ? '  ·  Backup: ' + acc.backup_date : ''}`;
-        row.innerHTML = `
-          <div class="account-dot"></div>
-          <div class="account-info">
-            <div class="account-name">${acc.name_tag}</div>
-            <div class="account-meta">${meta}</div>
-          </div>
-          <div class="account-actions">
-            <button class="acc-btn acc-btn-apply">Apply</button>
-            <button class="acc-btn acc-btn-restore" ${!hasBackup ? 'disabled title="No backup available"' : ''}>Restore</button>
-          </div>
-        `;
-        row.querySelector('.acc-btn-apply').addEventListener('click', () => applyToSaved(acc.folder));
-        row.querySelector('.acc-btn-restore').addEventListener('click', () => restoreAccount(acc.folder));
-        list.appendChild(row);
-      });
-    }
-    window.refreshAccounts = refreshAccounts;
-
-    startBtn.addEventListener('click', async () => {
-      const resolution = resInput.value.trim();
-      if (!resolution) { addLog('Please enter a resolution.', 'error'); return; }
-      if (!/^\d{3,4}x\d{3,4}$/i.test(resolution)) { addLog('Invalid format. Use WIDTHxHEIGHT (e.g. 1440x1080)', 'error'); return; }
-      logConsole.innerHTML = '';
-      addLog(`Starting with resolution ${resolution}...`, 'info');
-      setRunning(true);
-      await api(
-        () => window.pywebview.api.apply_stretched(resolution),
-        'apply_stretched failed. Please update EasyTS.'
-      );
-      setRunning(false);
-    });
-
-    async function applyToSaved(folder) {
-      const resolution = resInput.value.trim();
-      if (!resolution) { addLog('Please enter a resolution first.', 'error'); return; }
-      if (!/^\d{3,4}x\d{3,4}$/i.test(resolution)) { addLog('Invalid format. Use WIDTHxHEIGHT (e.g. 1440x1080)', 'error'); return; }
-      logConsole.innerHTML = '';
-      addLog(`Applying ${resolution} to saved account...`, 'info');
-      setRunning(true);
-      await api(
-        () => window.pywebview.api.apply_to_saved(folder, resolution),
-        'This feature requires a newer version of EasyTS. Please update.'
-      );
-      setRunning(false);
+    function setDriver(status) {
+      const c    = DRIVER_COPY[status] || DRIVER_COPY.not_found;
+      const card = document.getElementById('driver-card');
+      const pill = document.getElementById('driver-pill');
+      const btn  = document.getElementById('btn-driver');
+      card.dataset.status = DRIVER_COPY[status] ? status : 'not_found';
+      card.className = 'card' + (c.card ? ' ' + c.card : '');
+      pill.className = 'badge' + (c.tone ? ' ' + c.tone : '');
+      pill.textContent = c.pill;
+      document.getElementById('driver-sub').innerHTML = c.sub;
+      btn.className = 'card-btn' + (c.btnClass ? ' ' + c.btnClass : '');
+      btn.textContent = c.btn;
+      btn.disabled = c.disabled;
     }
 
-    async function restoreAccount(folder) {
-      logConsole.innerHTML = '';
-      addLog('Restoring backup...', 'info');
-      setRunning(true);
-      await api(
-        () => window.pywebview.api.restore_account(folder),
-        'This feature requires a newer version of EasyTS. Please update.'
-      );
-      setRunning(false);
+    async function refreshDriver() {
+      setDriver('checking');
+      const status = await api(() => window.pywebview.api.get_driver_status());
+      setDriver(status || 'not_found');
     }
 
-    document.getElementById('btn-github').addEventListener('click', () =>
-      api(() => window.pywebview.api.open_url(GITHUB_PAGE))
-    );
-    document.getElementById('btn-open-backups').addEventListener('click', () =>
-      api(
-        () => window.pywebview.api.open_backup_folder(),
-        'This feature requires a newer version of EasyTS. Please update.'
-      )
-    );
-    document.getElementById('btn-clear-accounts').addEventListener('click', async () => {
+    document.getElementById('btn-driver').addEventListener('click', async () => {
+      const status = document.getElementById('driver-card').dataset.status;
+      if (status === 'not_found') { refreshDriver(); return; }
+      const btn = document.getElementById('btn-driver');
+      btn.disabled = true;
+      btn.textContent = 'Waiting for permission...';
       const result = await api(
-        () => window.pywebview.api.clear_accounts(),
-        'This feature requires a newer version of EasyTS. Please update.'
+        () => window.pywebview.api.set_driver_enabled(status === 'disabled'),
+        UPDATE_MSG
       );
-      if (result !== null) {
-        await refreshAccounts();
-        addLog('Saved accounts cleared.', 'muted');
-      }
-    });
-    document.getElementById('btn-latest-release').addEventListener('click', () =>
-      api(() => window.pywebview.api.open_url(RELEASES_PAGE))
-    );
-
-
-
-    let readOnlyLockEnabled = false;
-
-    async function refreshReadOnlyLockSetting() {
-      const enabled = await api(
-        () => window.pywebview.api.get_read_only_lock_enabled(),
-        'This feature requires a newer version of EasyTS. Please update.'
-      );
-      if (enabled === null) return;
-      readOnlyLockEnabled = !!enabled;
-      const btn = document.getElementById('btn-readonly-toggle');
-      btn.textContent = readOnlyLockEnabled ? 'On' : 'Off';
-      btn.classList.toggle('settings-btn-accent', readOnlyLockEnabled);
-    }
-
-    document.getElementById('btn-readonly-toggle').addEventListener('click', async () => {
-      const result = await api(
-        () => window.pywebview.api.set_read_only_lock_enabled(!readOnlyLockEnabled),
-        'This feature requires a newer version of EasyTS. Please update.'
-      );
-      if (result && result.success) {
-        await refreshReadOnlyLockSetting();
-        addLog(readOnlyLockEnabled ? 'Read-only config lock enabled.' : 'Read-only config lock disabled.', 'info');
-      }
+      setDriver(result && result.status ? result.status : status);
     });
 
-    let bbCollapsed = false;
-    function toggleBlackBars() {
-      bbCollapsed = !bbCollapsed;
-      document.getElementById('blackbars-body').classList.toggle('collapsed', bbCollapsed);
-      document.getElementById('blackbars-toggle').classList.toggle('collapsed', bbCollapsed);
+    function renderAutoRestore() {
+      const btn = document.getElementById('btn-autorestore-toggle');
+      btn.textContent = autoRestore ? 'On' : 'Off';
+      btn.classList.toggle('on', autoRestore);
     }
 
-    async function initBlackBarsSection() {
+    async function refreshSettings() {
+      const settings = await api(() => window.pywebview.api.get_settings());
+      if (settings) autoRestore = !!settings.auto_restore;
+      renderAutoRestore();
+    }
+
+    document.getElementById('btn-autorestore-toggle').addEventListener('click', async () => {
+      const result = await api(() => window.pywebview.api.set_auto_restore(!autoRestore), UPDATE_MSG);
+      if (result && result.success) autoRestore = !!result.enabled;
+      renderAutoRestore();
+      refreshDisplay();
+    });
+
+    function bindCollapse(headId, toggleId, cardId) {
+      const toggle = () => document.getElementById(cardId).classList.toggle('collapsed');
+      document.getElementById(headId).addEventListener('click', toggle);
+      document.getElementById(toggleId).addEventListener('click', e => { e.stopPropagation(); toggle(); });
+    }
+    bindCollapse('setup-head', 'setup-toggle', 'setup-card');
+    bindCollapse('blackbars-head', 'blackbars-toggle', 'blackbars-card');
+
+    async function initBlackBars() {
       const needed = await api(() => window.pywebview.api.check_black_bars_needed());
-      if (needed) {
-        document.getElementById('blackbars-card').style.display = 'block';
-      }
+      if (needed) document.getElementById('blackbars-card').style.display = 'block';
     }
 
     document.getElementById('btn-fix-blackbars').addEventListener('click', async () => {
-      addLog('Launching black bars fix — accept the UAC prompt to continue...', 'info');
-      await api(
-        () => window.pywebview.api.fix_black_bars(),
-        'This feature requires a newer version of EasyTS. Please update.'
-      );
+      const btn = document.getElementById('btn-fix-blackbars');
+      btn.disabled = true;
+      await api(() => window.pywebview.api.fix_black_bars(), UPDATE_MSG);
+      btn.disabled = false;
     });
+
+    document.getElementById('btn-github').addEventListener('click', () =>
+      api(() => window.pywebview.api.open_url(GITHUB_PAGE)));
+    document.getElementById('btn-latest-release').addEventListener('click', () =>
+      api(() => window.pywebview.api.open_url(RELEASES_PAGE)));
+    document.getElementById('btn-open-data').addEventListener('click', () =>
+      api(() => window.pywebview.api.open_data_folder(), UPDATE_MSG));
+    document.getElementById('btn-legacy-download').addEventListener('click', () =>
+      api(() => window.pywebview.api.open_url(RELEASES_PAGE)));
 
     document.getElementById('btn-minimize').addEventListener('click', () => window.pywebview.api.minimize());
     document.getElementById('btn-close').addEventListener('click',    () => window.pywebview.api.close());
 
-    function showUpdateBanner(latestVersion, currentVersion, isOld) {
-      if (isOld) {
-        document.getElementById('update-banner-left').innerHTML =
-          '⚠ You are using an <span>outdated version</span> of EasyTS. We strongly recommend updating to <span>' + latestVersion + '</span>.';
-      } else {
-        document.getElementById('update-version').textContent = latestVersion;
-        document.getElementById('current-version-label').textContent = currentVersion;
-      }
+    function showUpdateBanner(latestVersion, currentVersion) {
+      document.getElementById('update-version').textContent = latestVersion;
+      document.getElementById('current-version-label').textContent = currentVersion;
       document.getElementById('update-banner').classList.add('visible');
       document.getElementById('btn-update-download').onclick = () =>
         api(() => window.pywebview.api.open_url(RELEASES_PAGE));
-      document.getElementById('btn-update-dismiss').onclick  = () =>
+      document.getElementById('btn-update-dismiss').onclick = () =>
         document.getElementById('update-banner').classList.remove('visible');
     }
 
@@ -831,23 +987,28 @@
         const resp   = await fetch(RELEASES_API, { headers: { "User-Agent": "EasyTS" } });
         const data   = await resp.json();
         const latest = data.tag_name;
-        if (!latest) return;
-
-        if (!exeVersion)                  showUpdateBanner(latest, null, true);
-        else if (exeVersion !== latest)   showUpdateBanner(latest, exeVersion, false);
+        if (latest && !versionAtLeast(exeVersion, latest)) showUpdateBanner(latest, exeVersion);
       } catch(e) {}
     }
 
+    window.addEventListener('focus', () => { if (exeVersion && !document.body.classList.contains('legacy')) refreshDisplay(); });
+
     window.addEventListener('pywebviewready', async () => {
       exeVersion = await api(() => window.pywebview.api.get_version());
-      if (exeVersion) {
-        document.getElementById('settings-version-label').textContent = exeVersion;
+
+      if (!versionAtLeast(exeVersion, MIN_SUPPORTED_VERSION)) {
+        document.body.classList.add('legacy');
+        return;
       }
 
-      refreshAccounts();
+      document.getElementById('settings-version-label').textContent = exeVersion;
+      renderChips();
+      refreshDisplay();
       refreshPresets();
+      refreshDriver();
+      refreshSettings();
+      initBlackBars();
       checkVersion();
-      initBlackBarsSection();
     });
   </script>
 

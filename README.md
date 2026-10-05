@@ -15,13 +15,6 @@ EasyTS handles the parts that are normally done by hand: switching your Windows 
 
 ---
 
-## Preview
-
-| Main page | Settings page |
-|---|---|
-| ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/main_page.png) | ![](https://raw.githubusercontent.com/ahhmilo/EasyTS/main/assets/settings_page.png) |
-
----
 
 ## True Stretch in action
 

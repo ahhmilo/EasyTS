@@ -294,7 +294,7 @@ You can delete that folder if you also want to remove your presets and settings.
 Open an issue on GitHub or contact me on Discord:
 
 ```text
-xbzvx
+haaiixd
 ```
 
 ---

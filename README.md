@@ -1,13 +1,13 @@
-[![Windows](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows11&logoColor=white&labelColor=555555)](#)
-[![Python](https://img.shields.io/badge/language-Python-3776AB?logo=python&logoColor=white&labelColor=555555)](#)
-[![HTML](https://img.shields.io/badge/language-HTML-E34F26?logo=html5&logoColor=white&labelColor=555555)](#)
-[![License](https://img.shields.io/badge/license-Proprietary-red)](#)
-
 <p align="center">
   <img src="assets/EasyTS_logo.png" width="160" alt="EasyTS logo">
 </p>
 
 # EasyTS
+
+[![Windows](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows11&logoColor=white&labelColor=555555)](#)
+[![Python](https://img.shields.io/badge/language-Python-3776AB?logo=python&logoColor=white&labelColor=555555)](#)
+[![HTML](https://img.shields.io/badge/language-HTML-E34F26?logo=html5&logoColor=white&labelColor=555555)](#)
+[![License](https://img.shields.io/badge/license-Proprietary-red)](#)
 
 A simple Windows tool for VALORANT True Stretch. Switch your display to a stretched resolution in one click, and get your original resolution back automatically when VALORANT closes.
 

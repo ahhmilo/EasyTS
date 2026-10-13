@@ -291,21 +291,11 @@ You can delete that folder if you also want to remove your presets and settings.
 
 ### My question is not listed here
 
-Open an issue on GitHub or contact me on Discord:
-
-```text
-haaiixd
-```
+Open an issue on GitHub or contact me on [Discord](https://discordapp.com/users/1167164306278846476)
 
 ---
 
 
 ## License
 
-Copyright (c) 2026 ahhmilo. All rights reserved.
-
-EasyTS is free to download and use from the official GitHub releases page.
-
-The source code is publicly viewable for transparency, but this software is proprietary. You may not copy, modify, redistribute, reupload, repackage, sell, or publish modified versions of the source code or executable without explicit permission from the author.
-
-You may share links to the official EasyTS GitHub repository or official GitHub releases page.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

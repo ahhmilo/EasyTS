@@ -43,6 +43,7 @@ EasyTS does not edit VALORANT's config files. Earlier versions did, and that met
 
 - One-click switching between popular stretched resolutions
 - Custom resolutions and saved presets
+- Global **Ctrl + Alt + S** hotkey to toggle your original and last applied stretched resolution
 - Automatic restore of your original resolution when VALORANT closes
 - Monitor driver on/off from a single card, with administrator permission requested only when needed
 - Live display card showing your current and original resolution
@@ -75,7 +76,7 @@ No installer is required.
 - A graphics driver that supports custom resolutions (NVIDIA Control Panel, AMD Software, or Intel Graphics Software)
 - Administrator permission for the monitor driver switch and the black bars fix. EasyTS asks through a normal Windows UAC prompt.
 - Microsoft WebView2 Runtime
-- An internet connection when EasyTS starts, because its interface is loaded from GitHub
+- An internet connection for interface updates and update checks. v4.1.0 includes a fallback interface if GitHub cannot be reached or still serves the older interface.
 
 WebView2 is usually pre-installed on Windows 11. Some Windows 10 or stripped-down Windows installs may need it installed manually. EasyTS will prompt you automatically if WebView2 is missing.
 
@@ -97,10 +98,22 @@ Do this before your first switch. The same guide is built into EasyTS under **Be
 1. Open EasyTS and check that the **Monitor driver** card says **Off**.
 2. Launch VALORANT and load into a match.
 3. Alt-tab to EasyTS and click a resolution, or type one and press **Apply**.
-4. Alt-tab back to VALORANT.
-5. When you are done, close VALORANT. With EasyTS still open, your original resolution comes back automatically.
+4. Alt-tab back to VALORANT. Before returning to the menu, press **Ctrl + Alt + S** to restore your original resolution.
+5. After the next match loads, press **Ctrl + Alt + S** again to apply your last stretched resolution.
+6. When you are done, close VALORANT. With EasyTS still open, your original resolution comes back automatically.
 
-Switch once you are in a match. Menus and agent select can glitch at a stretched resolution.
+Switch once you are in a match. Menus and agent select can glitch at a stretched resolution or cause VALORANT to switch back to Letterbox. Restoring **before leaving the match** and applying stretch after loading into the next one helped a user in repeated shooting-range tests. Ranked transitions still need testing; this is a workaround, not a guaranteed fix for every setup. If the game has already reset, set **Windowed Fullscreen** and **Fill** again.
+
+### Resolution hotkey
+
+Apply your preferred stretched resolution once using EasyTS. Then use **Ctrl + Alt + S** to switch between it and your saved original resolution, without alt-tabbing.
+
+- Restore your original resolution **before returning to the menu**. Apply stretch again **after the next match loads**.
+- EasyTS must stay open. The hotkey also works when it is minimized.
+- The last successfully applied stretched resolution is remembered across app restarts. Restoring your original resolution does not replace it.
+- Turn the hotkey on or off in **Settings**. It is on by default and does not require administrator permission.
+- If another app or EasyTS window is using the shortcut, Settings shows that it is unavailable. Close the conflicting app, then turn the hotkey off and on to retry.
+- The shortcut changes Windows resolution. It does not change VALORANT's in-game settings or detect match transitions.
 
 ### Auto-restore
 
@@ -207,7 +220,7 @@ That almost always means the resolution is not registered as a custom resolution
 
 ### Do I have to keep EasyTS open?
 
-Only if you want your resolution restored automatically. Switching resolution works fine and stays applied if you close EasyTS afterwards, but you would then restore it yourself, either by reopening EasyTS and pressing **Restore original** or through Windows display settings.
+Keep EasyTS open to use the global hotkey or automatic resolution restore. Switching resolution works fine and stays applied if you close EasyTS afterwards, but you would then restore it yourself, either by reopening EasyTS and pressing **Restore original** or through Windows display settings.
 
 ---
 
@@ -220,6 +233,14 @@ Open EasyTS and press **Turn on** on the **Monitor driver** card. If EasyTS will
 ### My screen went black or looks wrong.
 
 Wait a few seconds first. If it does not recover, press `Win + Ctrl + Shift + B` to reset the graphics driver, or change the resolution back in Windows display settings. EasyTS asks Windows for a live resolution change rather than saving it as your permanent display setting. Restarting your PC is the last resort.
+
+---
+
+### Black bars return after each match. What should I do?
+
+Try restoring your original resolution **before returning to the menu**, then applying stretch once the next match loads. Use **Ctrl + Alt + S** for both steps. A user confirmed this sequence in the shooting range after a read-only config lock failed to help; ranked transitions still need testing.
+
+If VALORANT has already changed its display settings, set **Windowed Fullscreen** and **Fill** again. EasyTS does not lock or edit the game's config.
 
 ---
 

@@ -555,7 +555,7 @@
           <div class="step-num">5</div>
           <div>
             <div class="step-title">Switch once you are in a match</div>
-            <div class="step-body">Apply your resolution after the match has loaded. Menus and agent select can glitch at a stretched resolution. Leave EasyTS open in the background and it restores your resolution when VALORANT closes.</div>
+            <div class="step-body">Apply your resolution after the match has loaded. Restore your original resolution <b>before returning to the menu</b>, then apply stretch after the next match loads. This helped a user avoid Letterbox when repeating the shooting range; ranked transitions still need testing. In v4.1.0, <b>Ctrl + Alt + S</b> toggles both ways while EasyTS is open. If the game has already reset, set Windowed Fullscreen and Fill again.</div>
           </div>
         </div>
       </div>
@@ -622,6 +622,17 @@
           <div class="settings-row-sub">When you switch resolution, EasyTS saves your original one and restores it after VALORANT closes. Only works while EasyTS is open.</div>
         </div>
         <button class="settings-btn" id="btn-autorestore-toggle">Off</button>
+      </div>
+    </div>
+
+    <div class="settings-card" id="hotkey-card" hidden>
+      <div class="settings-row">
+        <div>
+          <div class="settings-row-label">Resolution hotkey · Ctrl + Alt + S</div>
+          <div class="settings-row-sub">Toggle your original and last applied stretched resolution without alt-tabbing. Apply stretch once first. Works while EasyTS is open, including minimized.</div>
+          <div class="settings-row-sub" id="hotkey-status" role="status"></div>
+        </div>
+        <button class="settings-btn" id="btn-hotkey-toggle">Off</button>
       </div>
     </div>
 
@@ -940,6 +951,30 @@
       refreshDisplay();
     });
 
+    let hotkeyEnabled = false;
+    async function refreshHotkey() {
+      if (!versionAtLeast(exeVersion, 'v4.1.0')) return;
+      document.getElementById('hotkey-card').hidden = false;
+      const status = await api(() => window.pywebview.api.get_hotkey_status());
+      const label = document.getElementById('hotkey-status');
+      if (!status) { label.textContent = 'Could not read hotkey status.'; return; }
+      hotkeyEnabled = status.enabled;
+      const btn = document.getElementById('btn-hotkey-toggle');
+      btn.textContent = hotkeyEnabled ? 'On' : 'Off';
+      btn.classList.toggle('on', status.active);
+      label.textContent = status.message || (status.active ? 'Ready · Restore before returning to the menu; apply stretch after loading into a match.' : 'Hotkey is off.');
+    }
+
+    document.getElementById('btn-hotkey-toggle').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-hotkey-toggle');
+      btn.disabled = true;
+      try {
+        const result = await api(() => window.pywebview.api.set_hotkey_enabled(!hotkeyEnabled), UPDATE_MSG);
+        await refreshHotkey();
+        if (result && !result.success) document.getElementById('hotkey-status').textContent = result.message;
+      } finally { btn.disabled = false; }
+    });
+
     function bindCollapse(headId, toggleId, cardId) {
       const toggle = () => document.getElementById(cardId).classList.toggle('collapsed');
       document.getElementById(headId).addEventListener('click', toggle);
@@ -1007,6 +1042,7 @@
       refreshPresets();
       refreshDriver();
       refreshSettings();
+      refreshHotkey();
       initBlackBars();
       checkVersion();
     });

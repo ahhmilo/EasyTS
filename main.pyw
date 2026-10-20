@@ -10,6 +10,7 @@
 
 import webview
 import os
+import sys
 import re
 import json
 import time
@@ -24,9 +25,10 @@ import webbrowser
 import urllib.request
 import tkinter as tk
 from tkinter import messagebox
+from ctypes import wintypes
 from typing import Optional, Tuple
 
-CURRENT_VERSION = "v4.0.0"
+CURRENT_VERSION = "v4.1.0"
 GITHUB_URL      = "https://github.com/ahhmilo/EasyTS"
 HTML_URL        = "https://raw.githubusercontent.com/ahhmilo/EasyTS/refs/heads/main/index.html"
 
@@ -64,7 +66,7 @@ MAX_DIMENSION           = 16384
 
 RESOLUTION_PATTERN = re.compile(r"^\s*(\d{3,5})\s*[x\u00d7,\s]\s*(\d{3,5})\s*$", re.IGNORECASE)
 
-DEFAULT_SETTINGS = {"auto_restore": True}
+DEFAULT_SETTINGS = {"auto_restore": True, "hotkey_enabled": True}
 
 DRIVER_STATUS_SCRIPT = (
     "Get-PnpDevice -Class Monitor -PresentOnly -ErrorAction SilentlyContinue | "
@@ -525,6 +527,60 @@ def show_fatal_error(message: str) -> None:
     root.destroy()
 
 
+class ResolutionHotkey:
+    def __init__(self, callback):
+        self.callback = callback
+        self.stop = threading.Event()
+        self.ready = threading.Event()
+        self.active = False
+        self.error = ""
+        self.thread = None
+        self.busy = threading.Lock()
+
+    def start(self):
+        self.thread = threading.Thread(target=self._loop, daemon=True)
+        self.thread.start()
+        self.ready.wait(2)
+
+    def close(self):
+        self.stop.set()
+        if self.thread:
+            self.thread.join(2)
+
+    def _invoke(self):
+        try:
+            if not self.stop.is_set():
+                self.callback()
+        finally:
+            self.busy.release()
+
+    def _loop(self):
+        user32 = ctypes.WinDLL("user32", use_last_error=True)
+        user32.RegisterHotKey.argtypes = [wintypes.HWND, ctypes.c_int, wintypes.UINT, wintypes.UINT]
+        user32.RegisterHotKey.restype = wintypes.BOOL
+        user32.UnregisterHotKey.argtypes = [wintypes.HWND, ctypes.c_int]
+        user32.UnregisterHotKey.restype = wintypes.BOOL
+        user32.PeekMessageW.argtypes = [ctypes.POINTER(wintypes.MSG), wintypes.HWND, wintypes.UINT, wintypes.UINT, wintypes.UINT]
+        user32.PeekMessageW.restype = wintypes.BOOL
+        try:
+            self.active = bool(user32.RegisterHotKey(None, 1, 0x4003, ord("S")))
+            if not self.active:
+                self.error = "Ctrl + Alt + S is unavailable. Another app or EasyTS window may be using it. Close it, then turn the hotkey off and on to retry."
+            self.ready.set()
+            msg = wintypes.MSG()
+            while self.active and not self.stop.wait(0.04):
+                while user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 1):
+                    if msg.message == 0x0312 and msg.wParam == 1 and self.busy.acquire(blocking=False):
+                        threading.Thread(target=self._invoke, daemon=True).start()
+        except Exception as exc:
+            self.error = f"Could not register Ctrl + Alt + S: {exc}"
+        finally:
+            self.ready.set()
+            if self.active:
+                user32.UnregisterHotKey(None, 1)
+            self.active = False
+
+
 class Api:
     def __init__(self):
         self._window  = None
@@ -532,6 +588,69 @@ class Api:
         self._stop    = threading.Event()
         self._watcher = None
         self._seen    = False
+        self._hotkey = None
+        self._hotkey_lock = threading.Lock()
+        self._closing = False
+
+    def start_hotkey(self):
+        with self._hotkey_lock:
+            if not self._closing and self._hotkey is None and load_settings()["hotkey_enabled"]:
+                self._hotkey = ResolutionHotkey(self.toggle_resolution)
+                self._hotkey.start()
+
+    def shutdown(self):
+        self._closing = True
+        self._stop_watcher()
+        with self._hotkey_lock:
+            if self._hotkey:
+                self._hotkey.close()
+                self._hotkey = None
+
+    def get_hotkey_status(self):
+        hotkey = self._hotkey
+        return {
+            "enabled": load_settings()["hotkey_enabled"],
+            "active": bool(hotkey and hotkey.active),
+            "message": hotkey.error if hotkey else "",
+        }
+
+    def set_hotkey_enabled(self, enabled):
+        with self._hotkey_lock:
+            try:
+                with self._lock:
+                    settings = load_settings()
+                    settings["hotkey_enabled"] = bool(enabled)
+                    save_settings(settings)
+                if self._hotkey:
+                    self._hotkey.close()
+                    self._hotkey = None
+                if enabled and not self._closing:
+                    self._hotkey = ResolutionHotkey(self.toggle_resolution)
+                    self._hotkey.start()
+                return {"success": True, **self.get_hotkey_status()}
+            except Exception as exc:
+                return {"success": False, "message": str(exc)}
+
+    def toggle_resolution(self):
+        with self._lock:
+            if self._closing:
+                return {"success": False}
+            try:
+                current = get_display_resolution()
+                original = load_display_state().get("original")
+                if original and tuple(original) != current:
+                    return self.restore_display()
+                target = read_json_file("last_resolution.json", None)
+                if not isinstance(target, str):
+                    raise ValueError("Apply a stretched resolution in EasyTS once before using Ctrl + Alt + S.")
+                parse_resolution(target)
+                if original:
+                    clear_display_state()
+                    self._stop_watcher()
+                return self.apply_resolution(target)
+            except Exception as exc:
+                self._log(str(exc), "error")
+                return {"success": False, "message": str(exc)}
 
     def _log(self, message: str, msg_type: str = "info") -> None:
         if self._window:
@@ -543,7 +662,7 @@ class Api:
     def _notify(self) -> None:
         if self._window:
             try:
-                self._window.evaluate_js("window.refreshDisplay && window.refreshDisplay();")
+                self._window.evaluate_js("void (window.refreshDisplay && window.refreshDisplay());")
             except Exception:
                 pass
 
@@ -577,8 +696,11 @@ class Api:
                 continue
             if stop.is_set():
                 return
-            self._log("VALORANT closed. Restoring your display resolution...", "info")
-            self.restore_display()
+            with self._lock:
+                if stop.is_set():
+                    return
+                self._log("VALORANT closed. Restoring your display resolution...", "info")
+                self.restore_display()
             return
 
     def _snapshot(self) -> dict:
@@ -614,7 +736,7 @@ class Api:
             )
             if not self._window.create_confirmation_dialog("EasyTS", message):
                 return
-        self._stop_watcher()
+        self.shutdown()
         self._window.destroy()
 
     def minimize(self):
@@ -632,7 +754,8 @@ class Api:
 
     def get_display_state(self) -> dict:
         try:
-            return self._snapshot()
+            with self._lock:
+                return self._snapshot()
         except Exception as e:
             return {"error": str(e)}
 
@@ -652,6 +775,9 @@ class Api:
                     return {"success": True, "changed": False}
 
                 state = load_display_state()
+                if state.get("original") and tuple(state["original"]) == current:
+                    state = {}
+                previous_state = dict(state)
                 newly_saved = not state.get("original")
                 if newly_saved:
                     state = {"original": list(current)}
@@ -664,6 +790,8 @@ class Api:
                 except DisplayError:
                     if newly_saved:
                         clear_display_state()
+                    else:
+                        save_display_state(previous_state)
                     raise
 
                 ow, oh = state["original"]
@@ -672,6 +800,10 @@ class Api:
                     self._stop_watcher()
                     self._log(f"Display restored to {width}x{height}.", "success")
                 else:
+                    try:
+                        write_json_file("last_resolution.json", f"{width}x{height}")
+                    except Exception as exc:
+                        self._log(f"Resolution applied, but the hotkey target could not be saved: {exc}", "error")
                     self._log(f"Display set to {width}x{height}. Original resolution {ow}x{oh} saved.", "success")
                     if load_settings()["auto_restore"]:
                         self._start_watcher()
@@ -765,10 +897,11 @@ class Api:
 
     def set_auto_restore(self, enabled: bool) -> dict:
         enable   = bool(enabled)
-        settings = load_settings()
-        settings["auto_restore"] = enable
         try:
-            save_settings(settings)
+            with self._lock:
+                settings = load_settings()
+                settings["auto_restore"] = enable
+                save_settings(settings)
         except Exception as e:
             return {"success": False, "message": str(e)}
 
@@ -831,7 +964,16 @@ def main():
     ensure_webview2()
 
     try:
-        html_content = download_html(HTML_URL)
+        bundled_path = os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))), "index.html")
+        try:
+            html_content = download_html(HTML_URL)
+        except Exception:
+            html_content = ""
+        if 'id="hotkey-card"' not in html_content and os.path.isfile(bundled_path):
+            with open(bundled_path, encoding="utf-8") as source:
+                html_content = source.read()
+        if not html_content:
+            raise RuntimeError("Interface unavailable")
     except Exception:
         show_fatal_error(
             "EasyTS could not load its interface.\n\n"
@@ -851,7 +993,12 @@ def main():
         easy_drag = True,
     )
     api._window = window
-    webview.start()
+    window.events.closed += api.shutdown
+    api.start_hotkey()
+    try:
+        webview.start()
+    finally:
+        api.shutdown()
 
 
 if __name__ == "__main__":

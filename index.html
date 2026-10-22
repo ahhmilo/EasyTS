@@ -391,6 +391,16 @@
     .settings-btn-accent:hover { background: var(--accent-dim); border-color: var(--accent); }
     .settings-btn.on { color: var(--ok); border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.07); }
 
+    #hotkey-editor { padding: 14px 16px; }
+    .hotkey-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+    #hotkey-label { flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text); }
+    #hotkey-status:empty { display: none; }
+    #hotkey-status { color: var(--warn); }
+    #hotkey-card.capturing #hotkey-label { color: var(--accent); }
+    #hotkey-card.capturing #btn-hotkey-change { border-color: var(--accent); color: var(--accent); }
+    #btn-hotkey-reset { color: var(--muted2); }
+    .settings-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
     .about-creator { display: flex; align-items: center; gap: 12px; padding: 18px 16px; }
     .about-avatar {
       width: 38px; height: 38px; border-radius: 50%;
@@ -628,22 +638,19 @@
     <div class="settings-card" id="hotkey-card" hidden>
       <div class="settings-row">
         <div>
-          <div class="settings-row-label">Resolution hotkey · <span id="hotkey-label">Ctrl + Alt + S</span></div>
-          <div class="settings-row-sub">Toggle your original and last applied stretched resolution without alt-tabbing. Apply stretch once first. Works while EasyTS is open, including minimized.</div>
+          <div class="settings-row-label">Resolution hotkey</div>
+          <div class="settings-row-sub">Switch between original and stretched, even while minimized.</div>
           <div class="settings-row-sub" id="hotkey-status" role="status"></div>
         </div>
         <button class="settings-btn" id="btn-hotkey-toggle">Off</button>
       </div>
       <div id="hotkey-editor" hidden>
-        <div class="settings-row-sub">Choose a single key, such as F6, or add modifiers. Avoid keys you use in-game or for typing: this shortcut also works outside VALORANT. Some game bindings cannot be detected as conflicts.</div>
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px">
-          <label>Key <select id="hotkey-key" class="settings-btn" aria-label="Hotkey key"></select></label>
-          <label><input type="checkbox" id="hotkey-ctrl"> Ctrl</label>
-          <label><input type="checkbox" id="hotkey-alt"> Alt</label>
-          <label><input type="checkbox" id="hotkey-shift"> Shift</label>
-          <button class="settings-btn" id="btn-hotkey-save">Save shortcut</button>
-          <button class="settings-btn" id="btn-hotkey-reset">Reset default</button>
+        <div class="hotkey-controls">
+          <span id="hotkey-label">Ctrl + Alt + S</span>
+          <button class="settings-btn" id="btn-hotkey-change">Change</button>
+          <button class="settings-btn" id="btn-hotkey-reset">Reset</button>
         </div>
+        <div class="settings-row-sub" id="hotkey-help">Pick a key you don't use in-game. Apply stretch once first.</div>
       </div>
     </div>
 
@@ -973,25 +980,12 @@
       document.getElementById('hotkey-label').textContent = status.label || 'Ctrl + Alt + S';
       const customizable = versionAtLeast(exeVersion, 'v4.2.0') && status.binding;
       document.getElementById('hotkey-editor').hidden = !customizable;
-      if (customizable) {
-        document.getElementById('hotkey-key').value = status.binding.key;
-        document.getElementById('hotkey-ctrl').checked = !!(status.binding.modifiers & 2);
-        document.getElementById('hotkey-alt').checked = !!(status.binding.modifiers & 1);
-        document.getElementById('hotkey-shift').checked = !!(status.binding.modifiers & 4);
-      }
       const btn = document.getElementById('btn-hotkey-toggle');
       btn.textContent = hotkeyEnabled ? 'On' : 'Off';
       btn.classList.toggle('on', status.active);
-      label.textContent = status.message || (status.active ? 'Ready · Restore before returning to the menu; apply stretch after loading into a match.' : 'Hotkey is off.');
+      label.textContent = status.message || (!status.active && status.enabled ? 'Shortcut unavailable.' : '');
     }
 
-    const hotkeyKeys = [...Array.from({length: 11}, (_, i) => `F${i + 1}`), ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'];
-    hotkeyKeys.forEach(key => {
-      const option = document.createElement('option');
-      option.value = key;
-      option.textContent = key;
-      document.getElementById('hotkey-key').appendChild(option);
-    });
     let hotkeySaving = false;
     async function saveHotkeyChange(action) {
       if (hotkeySaving) return;
@@ -1010,15 +1004,66 @@
     }
     document.getElementById('btn-hotkey-toggle').addEventListener('click', () =>
       saveHotkeyChange(() => window.pywebview.api.set_hotkey_enabled(!hotkeyEnabled)));
-    document.getElementById('btn-hotkey-save').addEventListener('click', () => {
-      const binding = {
-        key: document.getElementById('hotkey-key').value,
-        modifiers: (document.getElementById('hotkey-ctrl').checked ? 2 : 0) |
-          (document.getElementById('hotkey-alt').checked ? 1 : 0) |
-          (document.getElementById('hotkey-shift').checked ? 4 : 0)
-      };
-      saveHotkeyChange(() => window.pywebview.api.set_hotkey(binding));
+    let capturingHotkey = false;
+    let restoreHotkey = false;
+    const changeHotkey = document.getElementById('btn-hotkey-change');
+    const hotkeyHelp = document.getElementById('hotkey-help');
+    async function finishHotkeyCapture(binding = null) {
+      if (!capturingHotkey) return;
+      capturingHotkey = false;
+      changeHotkey.textContent = 'Change';
+      document.getElementById('hotkey-card').classList.remove('capturing');
+      hotkeyHelp.textContent = "Pick a key you don't use in-game. Apply stretch once first.";
+      await saveHotkeyChange(async () => {
+        if (restoreHotkey) {
+          const restored = await window.pywebview.api.set_hotkey_enabled(true);
+          if (!restored.success) return restored;
+        }
+        return binding ? window.pywebview.api.set_hotkey(binding) : {success: true};
+      });
+    }
+    changeHotkey.addEventListener('click', async () => {
+      if (capturingHotkey) { await finishHotkeyCapture(); return; }
+      if (hotkeySaving) return;
+      restoreHotkey = hotkeyEnabled;
+      hotkeySaving = true;
+      changeHotkey.disabled = true;
+      try {
+        if (restoreHotkey) {
+          const result = await api(() => window.pywebview.api.set_hotkey_enabled(false));
+          if (!result || !result.success) {
+            document.getElementById('hotkey-status').textContent = 'Could not start shortcut capture.';
+            return;
+          }
+        }
+        capturingHotkey = true;
+        document.getElementById('hotkey-card').classList.add('capturing');
+        changeHotkey.textContent = 'Cancel';
+        hotkeyHelp.textContent = 'Press a key or combination. Escape cancels.';
+        document.getElementById('btn-hotkey-toggle').disabled = true;
+        document.getElementById('btn-hotkey-reset').disabled = true;
+      } finally {
+        hotkeySaving = false;
+        changeHotkey.disabled = false;
+      }
+      if (!document.hasFocus()) finishHotkeyCapture();
     });
+    window.addEventListener('keydown', event => {
+      if (!capturingHotkey) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (event.repeat) return;
+      if (event.key === 'Escape') { finishHotkeyCapture(); return; }
+      if (['Control', 'Alt', 'Shift', 'Meta'].includes(event.key)) return;
+      const key = event.key.toUpperCase();
+      if (event.metaKey || !/^(F[1-9]|F10|F11|[A-Z0-9])$/.test(key)) {
+        hotkeyHelp.textContent = 'Use F1–F11, A–Z or 0–9. Ctrl, Alt and Shift are optional.';
+        return;
+      }
+      finishHotkeyCapture({key, modifiers: (event.ctrlKey ? 2 : 0) | (event.altKey ? 1 : 0) | (event.shiftKey ? 4 : 0)});
+    }, true);
+    window.addEventListener('blur', () => finishHotkeyCapture());
+    settingsBtn.addEventListener('click', () => finishHotkeyCapture());
     document.getElementById('btn-hotkey-reset').addEventListener('click', () =>
       saveHotkeyChange(() => window.pywebview.api.set_hotkey({key: 'S', modifiers: 3})));
 
@@ -1052,7 +1097,7 @@
       api(() => window.pywebview.api.open_url(RELEASES_PAGE)));
 
     document.getElementById('btn-minimize').addEventListener('click', () => window.pywebview.api.minimize());
-    document.getElementById('btn-close').addEventListener('click',    () => window.pywebview.api.close());
+    document.getElementById('btn-close').addEventListener('click', async () => { await finishHotkeyCapture(); window.pywebview.api.close(); });
 
     function showUpdateBanner(latestVersion, currentVersion) {
       document.getElementById('update-version').textContent = latestVersion;

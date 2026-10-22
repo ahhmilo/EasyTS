@@ -28,7 +28,7 @@ from tkinter import messagebox
 from ctypes import wintypes
 from typing import Optional, Tuple
 
-CURRENT_VERSION = "v4.1.0"
+CURRENT_VERSION = "v4.2.0"
 GITHUB_URL      = "https://github.com/ahhmilo/EasyTS"
 HTML_URL        = "https://raw.githubusercontent.com/ahhmilo/EasyTS/refs/heads/main/index.html"
 
@@ -67,6 +67,25 @@ MAX_DIMENSION           = 16384
 RESOLUTION_PATTERN = re.compile(r"^\s*(\d{3,5})\s*[x\u00d7,\s]\s*(\d{3,5})\s*$", re.IGNORECASE)
 
 DEFAULT_SETTINGS = {"auto_restore": True, "hotkey_enabled": True}
+DEFAULT_HOTKEY = {"key": "S", "modifiers": 3}
+HOTKEY_KEYS = {chr(k): k for k in range(65, 91)}
+HOTKEY_KEYS.update({str(k): 48 + k for k in range(10)})
+HOTKEY_KEYS.update({f"F{k}": 111 + k for k in range(1, 12)})
+
+
+def validate_hotkey(value):
+    if not isinstance(value, dict):
+        raise ValueError("Choose a key and optional Ctrl, Alt or Shift modifiers.")
+    key, modifiers = value.get("key"), value.get("modifiers")
+    if not isinstance(key, str) or key not in HOTKEY_KEYS or type(modifiers) is not int or not 0 <= modifiers <= 7:
+        raise ValueError("Use A–Z, 0–9 or F1–F11, with optional Ctrl, Alt or Shift.")
+    if (key == "F4" and modifiers & 1) or (key == "F10" and modifiers == 4):
+        raise ValueError("That shortcut is reserved for window controls. Choose another one.")
+    return {"key": key, "modifiers": modifiers}
+
+
+def hotkey_label(value):
+    return " + ".join([name for bit, name in [(2, "Ctrl"), (1, "Alt"), (4, "Shift")] if value["modifiers"] & bit] + [value["key"]])
 
 DRIVER_STATUS_SCRIPT = (
     "Get-PnpDevice -Class Monitor -PresentOnly -ErrorAction SilentlyContinue | "
@@ -218,6 +237,10 @@ def load_settings() -> dict:
         for key in DEFAULT_SETTINGS:
             if key in data:
                 settings[key] = bool(data[key])
+    try:
+        settings["hotkey"] = validate_hotkey(data.get("hotkey", DEFAULT_HOTKEY))
+    except (ValueError, AttributeError):
+        settings["hotkey"] = DEFAULT_HOTKEY.copy()
     return settings
 
 def save_settings(settings: dict) -> None:
@@ -528,8 +551,9 @@ def show_fatal_error(message: str) -> None:
 
 
 class ResolutionHotkey:
-    def __init__(self, callback):
+    def __init__(self, callback, binding=None):
         self.callback = callback
+        self.binding = validate_hotkey(DEFAULT_HOTKEY if binding is None else binding)
         self.stop = threading.Event()
         self.ready = threading.Event()
         self.active = False
@@ -563,9 +587,9 @@ class ResolutionHotkey:
         user32.PeekMessageW.argtypes = [ctypes.POINTER(wintypes.MSG), wintypes.HWND, wintypes.UINT, wintypes.UINT, wintypes.UINT]
         user32.PeekMessageW.restype = wintypes.BOOL
         try:
-            self.active = bool(user32.RegisterHotKey(None, 1, 0x4003, ord("S")))
+            self.active = bool(user32.RegisterHotKey(None, 1, 0x4000 | self.binding["modifiers"], HOTKEY_KEYS[self.binding["key"]]))
             if not self.active:
-                self.error = "Ctrl + Alt + S is unavailable. Another app or EasyTS window may be using it. Close it, then turn the hotkey off and on to retry."
+                self.error = f"{hotkey_label(self.binding)} is unavailable. Another app or Windows may be using it. Choose another shortcut or close the conflicting app."
             self.ready.set()
             msg = wintypes.MSG()
             while self.active and not self.stop.wait(0.04):
@@ -573,7 +597,7 @@ class ResolutionHotkey:
                     if msg.message == 0x0312 and msg.wParam == 1 and self.busy.acquire(blocking=False):
                         threading.Thread(target=self._invoke, daemon=True).start()
         except Exception as exc:
-            self.error = f"Could not register Ctrl + Alt + S: {exc}"
+            self.error = f"Could not register {hotkey_label(self.binding)}: {exc}"
         finally:
             self.ready.set()
             if self.active:
@@ -595,7 +619,7 @@ class Api:
     def start_hotkey(self):
         with self._hotkey_lock:
             if not self._closing and self._hotkey is None and load_settings()["hotkey_enabled"]:
-                self._hotkey = ResolutionHotkey(self.toggle_resolution)
+                self._hotkey = ResolutionHotkey(self.toggle_resolution, load_settings()["hotkey"])
                 self._hotkey.start()
 
     def shutdown(self):
@@ -608,27 +632,52 @@ class Api:
 
     def get_hotkey_status(self):
         hotkey = self._hotkey
+        settings = load_settings()
         return {
-            "enabled": load_settings()["hotkey_enabled"],
+            "enabled": settings["hotkey_enabled"],
+            "binding": settings["hotkey"],
+            "label": hotkey_label(settings["hotkey"]),
             "active": bool(hotkey and hotkey.active),
             "message": hotkey.error if hotkey else "",
         }
 
     def set_hotkey_enabled(self, enabled):
+        return self._configure_hotkey(enabled=bool(enabled))
+
+    def set_hotkey(self, binding):
+        try:
+            return self._configure_hotkey(binding=validate_hotkey(binding))
+        except ValueError as exc:
+            return {"success": False, "message": str(exc)}
+
+    def _configure_hotkey(self, binding=None, enabled=None):
         with self._hotkey_lock:
+            candidate = None
             try:
                 with self._lock:
+                    if self._closing:
+                        raise ValueError("EasyTS is closing.")
                     settings = load_settings()
-                    settings["hotkey_enabled"] = bool(enabled)
+                    if binding is not None:
+                        settings["hotkey"] = binding
+                    if enabled is not None:
+                        settings["hotkey_enabled"] = enabled
+                    old = self._hotkey
+                    reuse = bool(old and old.active and old.binding == settings["hotkey"])
+                    if settings["hotkey_enabled"] and not reuse:
+                        candidate = ResolutionHotkey(self.toggle_resolution, settings["hotkey"])
+                        candidate.start()
+                        if not candidate.active:
+                            raise ValueError(candidate.error or "Could not register the shortcut.")
                     save_settings(settings)
-                if self._hotkey:
-                    self._hotkey.close()
-                    self._hotkey = None
-                if enabled and not self._closing:
-                    self._hotkey = ResolutionHotkey(self.toggle_resolution)
-                    self._hotkey.start()
+                    if not settings["hotkey_enabled"] or not reuse:
+                        self._hotkey = candidate
+                        if old:
+                            old.close()
                 return {"success": True, **self.get_hotkey_status()}
             except Exception as exc:
+                if candidate:
+                    candidate.close()
                 return {"success": False, "message": str(exc)}
 
     def toggle_resolution(self):
@@ -642,7 +691,7 @@ class Api:
                     return self.restore_display()
                 target = read_json_file("last_resolution.json", None)
                 if not isinstance(target, str):
-                    raise ValueError("Apply a stretched resolution in EasyTS once before using Ctrl + Alt + S.")
+                    raise ValueError("Apply a stretched resolution in EasyTS once before using the resolution hotkey.")
                 parse_resolution(target)
                 if original:
                     clear_display_state()
@@ -969,7 +1018,7 @@ def main():
             html_content = download_html(HTML_URL)
         except Exception:
             html_content = ""
-        if 'id="hotkey-card"' not in html_content and os.path.isfile(bundled_path):
+        if 'id="hotkey-editor"' not in html_content and os.path.isfile(bundled_path):
             with open(bundled_path, encoding="utf-8") as source:
                 html_content = source.read()
         if not html_content:

@@ -555,7 +555,7 @@
           <div class="step-num">5</div>
           <div>
             <div class="step-title">Switch once you are in a match</div>
-            <div class="step-body">Apply your resolution after the match has loaded. Restore your original resolution <b>before returning to the menu</b>, then apply stretch after the next match loads. This helped a user avoid Letterbox when repeating the shooting range; ranked transitions still need testing. In v4.1.0, <b>Ctrl + Alt + S</b> toggles both ways while EasyTS is open. If the game has already reset, set Windowed Fullscreen and Fill again.</div>
+            <div class="step-body">Apply your resolution after the match has loaded. Restore your original resolution <b>before returning to the menu</b>, then apply stretch after the next match loads. This helped a user avoid Letterbox when repeating the shooting range; ranked transitions still need testing. The default shortcut, <b>Ctrl + Alt + S</b>, toggles both ways while EasyTS is open. In v4.2.0 you can choose your own shortcut in <b>Settings</b>. If the game has already reset, set Windowed Fullscreen and Fill again.</div>
           </div>
         </div>
       </div>
@@ -628,11 +628,22 @@
     <div class="settings-card" id="hotkey-card" hidden>
       <div class="settings-row">
         <div>
-          <div class="settings-row-label">Resolution hotkey · Ctrl + Alt + S</div>
+          <div class="settings-row-label">Resolution hotkey · <span id="hotkey-label">Ctrl + Alt + S</span></div>
           <div class="settings-row-sub">Toggle your original and last applied stretched resolution without alt-tabbing. Apply stretch once first. Works while EasyTS is open, including minimized.</div>
           <div class="settings-row-sub" id="hotkey-status" role="status"></div>
         </div>
         <button class="settings-btn" id="btn-hotkey-toggle">Off</button>
+      </div>
+      <div id="hotkey-editor" hidden>
+        <div class="settings-row-sub">Choose a single key, such as F6, or add modifiers. Avoid keys you use in-game or for typing: this shortcut also works outside VALORANT. Some game bindings cannot be detected as conflicts.</div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px">
+          <label>Key <select id="hotkey-key" class="settings-btn" aria-label="Hotkey key"></select></label>
+          <label><input type="checkbox" id="hotkey-ctrl"> Ctrl</label>
+          <label><input type="checkbox" id="hotkey-alt"> Alt</label>
+          <label><input type="checkbox" id="hotkey-shift"> Shift</label>
+          <button class="settings-btn" id="btn-hotkey-save">Save shortcut</button>
+          <button class="settings-btn" id="btn-hotkey-reset">Reset default</button>
+        </div>
       </div>
     </div>
 
@@ -959,21 +970,57 @@
       const label = document.getElementById('hotkey-status');
       if (!status) { label.textContent = 'Could not read hotkey status.'; return; }
       hotkeyEnabled = status.enabled;
+      document.getElementById('hotkey-label').textContent = status.label || 'Ctrl + Alt + S';
+      const customizable = versionAtLeast(exeVersion, 'v4.2.0') && status.binding;
+      document.getElementById('hotkey-editor').hidden = !customizable;
+      if (customizable) {
+        document.getElementById('hotkey-key').value = status.binding.key;
+        document.getElementById('hotkey-ctrl').checked = !!(status.binding.modifiers & 2);
+        document.getElementById('hotkey-alt').checked = !!(status.binding.modifiers & 1);
+        document.getElementById('hotkey-shift').checked = !!(status.binding.modifiers & 4);
+      }
       const btn = document.getElementById('btn-hotkey-toggle');
       btn.textContent = hotkeyEnabled ? 'On' : 'Off';
       btn.classList.toggle('on', status.active);
       label.textContent = status.message || (status.active ? 'Ready · Restore before returning to the menu; apply stretch after loading into a match.' : 'Hotkey is off.');
     }
 
-    document.getElementById('btn-hotkey-toggle').addEventListener('click', async () => {
-      const btn = document.getElementById('btn-hotkey-toggle');
-      btn.disabled = true;
+    const hotkeyKeys = [...Array.from({length: 11}, (_, i) => `F${i + 1}`), ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'];
+    hotkeyKeys.forEach(key => {
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = key;
+      document.getElementById('hotkey-key').appendChild(option);
+    });
+    let hotkeySaving = false;
+    async function saveHotkeyChange(action) {
+      if (hotkeySaving) return;
+      hotkeySaving = true;
+      const controls = document.querySelectorAll('#hotkey-card button, #hotkey-card input, #hotkey-card select');
+      controls.forEach(control => control.disabled = true);
       try {
-        const result = await api(() => window.pywebview.api.set_hotkey_enabled(!hotkeyEnabled), UPDATE_MSG);
+        const result = await api(action, UPDATE_MSG);
         await refreshHotkey();
         if (result && !result.success) document.getElementById('hotkey-status').textContent = result.message;
-      } finally { btn.disabled = false; }
+        if (!result) document.getElementById('hotkey-status').textContent = 'Could not save the shortcut. Try again.';
+      } finally {
+        hotkeySaving = false;
+        controls.forEach(control => control.disabled = false);
+      }
+    }
+    document.getElementById('btn-hotkey-toggle').addEventListener('click', () =>
+      saveHotkeyChange(() => window.pywebview.api.set_hotkey_enabled(!hotkeyEnabled)));
+    document.getElementById('btn-hotkey-save').addEventListener('click', () => {
+      const binding = {
+        key: document.getElementById('hotkey-key').value,
+        modifiers: (document.getElementById('hotkey-ctrl').checked ? 2 : 0) |
+          (document.getElementById('hotkey-alt').checked ? 1 : 0) |
+          (document.getElementById('hotkey-shift').checked ? 4 : 0)
+      };
+      saveHotkeyChange(() => window.pywebview.api.set_hotkey(binding));
     });
+    document.getElementById('btn-hotkey-reset').addEventListener('click', () =>
+      saveHotkeyChange(() => window.pywebview.api.set_hotkey({key: 'S', modifiers: 3})));
 
     function bindCollapse(headId, toggleId, cardId) {
       const toggle = () => document.getElementById(cardId).classList.toggle('collapsed');

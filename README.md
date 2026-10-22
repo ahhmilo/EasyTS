@@ -43,7 +43,7 @@ EasyTS does not edit VALORANT's config files. Earlier versions did, and that met
 
 - One-click switching between popular stretched resolutions
 - Custom resolutions and saved presets
-- Global **Ctrl + Alt + S** hotkey to toggle your original and last applied stretched resolution
+- Customizable global hotkey (default: **Ctrl + Alt + S**) to toggle your original and last applied stretched resolution
 - Automatic restore of your original resolution when VALORANT closes
 - Monitor driver on/off from a single card, with administrator permission requested only when needed
 - Live display card showing your current and original resolution
@@ -105,6 +105,12 @@ Do this before your first switch. The same guide is built into EasyTS under **Be
 Switch once you are in a match. Menus and agent select can glitch at a stretched resolution or cause VALORANT to switch back to Letterbox. Restoring **before leaving the match** and applying stretch after loading into the next one helped a user in repeated shooting-range tests. Ranked transitions still need testing; this is a workaround, not a guaranteed fix for every setup. If the game has already reset, set **Windowed Fullscreen** and **Fill** again.
 
 ### Resolution hotkey
+
+The instructions below use the default **Ctrl + Alt + S** shortcut. If you customize it, use your chosen key instead.
+
+To change it, open **Settings → Resolution hotkey**, choose a key and any modifiers, then click **Save shortcut**. For a single key such as **F6**, leave **Ctrl**, **Alt**, and **Shift** unchecked. **Reset default** restores **Ctrl + Alt + S**. Your choice is saved across restarts; changing it while the hotkey is off leaves it off.
+
+Supported keys are **F1–F11**, **A–Z**, and **0–9**, with optional Ctrl, Alt, and Shift. Choose a key you do not use for gameplay or typing: it also works outside VALORANT. Windows registration conflicts are detected, but some in-game bindings cannot be detected. If a new shortcut is unavailable, EasyTS keeps your previous shortcut and shows an error. No keyboard macro is needed.
 
 Apply your preferred stretched resolution once using EasyTS. Then use **Ctrl + Alt + S** to switch between it and your saved original resolution, without alt-tabbing.
 
